@@ -7,18 +7,23 @@ const client = new MercadoPagoConfig({
 });
 
 export async function POST(req: Request) {
+    let step = 'init';
     try {
+        step = 'supabase_client';
         const supabase = await createServerSupabaseClient();
+
+        step = 'supabase_auth';
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        step = 'parsing_body';
         const body = await req.json();
-        const { planId, email } = body; // planId: 'basico' | 'premium'
+        const { planId, email } = body;
 
-        // Obtener comercio
+        step = 'fetching_comercio';
         const { data: comercio } = await supabase
             .from('comercios')
             .select('*')
@@ -28,6 +33,18 @@ export async function POST(req: Request) {
         if (!comercio) {
             return NextResponse.json({ error: 'Comercio not found' }, { status: 404 });
         }
+
+        step = 'mp_config';
+        if (!process.env.MP_ACCESS_TOKEN) {
+            throw new Error('MP_ACCESS_TOKEN is missing');
+        }
+
+        // Loguear parcialmente el token para debug
+        console.log('Using MP Token:', process.env.MP_ACCESS_TOKEN.substring(0, 10) + '...');
+
+        const client = new MercadoPagoConfig({
+            accessToken: process.env.MP_ACCESS_TOKEN
+        });
 
         let transactionAmount = 0;
         let reason = '';
@@ -45,20 +62,24 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
         }
 
+        step = 'mp_create_preapproval';
         const preapproval = new PreApproval(client);
+
+        const backUrl = `${process.env.NEXT_PUBLIC_URL || 'https://hacelo-tuyo-store-olhw.vercel.app'}/admin/dashboard?status=approved`;
+        console.log('Back URL:', backUrl);
 
         const response = await preapproval.create({
             body: {
                 reason: reason,
-                external_reference: comercio.id, // Vinculamos la suscripción al ID del comercio
-                payer_email: email || user.email || 'test_user_123@testuser.com', // Email del pagador (debe ser un user de prueba en Sandbox)
+                external_reference: comercio.id,
+                payer_email: email || user.email || 'test_user_492421908@testuser.com',
                 auto_recurring: {
                     frequency: 1,
                     frequency_type: 'months',
                     transaction_amount: transactionAmount,
                     currency_id: 'ARS'
                 },
-                back_url: `${process.env.NEXT_PUBLIC_URL || 'https://hacelo-tuyo-store-olhw.vercel.app'}/admin/dashboard?status=approved`,
+                back_url: backUrl,
                 status: 'pending'
             }
         });
@@ -70,13 +91,25 @@ export async function POST(req: Request) {
         return NextResponse.json({ init_point: response.init_point });
 
     } catch (error: any) {
-        console.error('Mercado Pago Error:', error);
+        // Logs solicitados explícitamente por el usuario
+        console.error("MP FULL ERROR ↓↓↓");
+        console.error(error);
+        console.error("MP RESPONSE DATA ↓↓↓");
+        console.error(error?.response?.data);
+        console.error("MP STATUS ↓↓↓");
+        console.error(error?.response?.status);
 
-        // Intentar extraer la info útil de Mercado Pago
-        const errorDetails = error.cause || error.response?.data || error;
+        console.error('Mercado Pago Error at step ' + step + ':', error);
+
+        const errorDetails = {
+            message: error.message,
+            cause: error.cause,
+            response_data: error.response?.data, // Aquí suele estar el error de MP
+            stack: error.stack
+        };
 
         return NextResponse.json({
-            error: error.message || 'Internal server error',
+            error: `Failed at step: ${step}`,
             details: errorDetails
         }, { status: 500 });
     }
