@@ -70,7 +70,8 @@ export default function PlanTab({ comercio, productosCount }: PlanTabProps) {
                 // Redirigir a Mercado Pago
                 window.location.href = data.init_point;
             } else {
-                alert('Error al iniciar suscripción: ' + (data.error || 'Unknown error'));
+                console.error('Subscription Error:', data);
+                alert(`Error al iniciar suscripción: ${data.error}\nDetalles: ${data.details || ''}`);
                 setLoadingPlan(null);
             }
 

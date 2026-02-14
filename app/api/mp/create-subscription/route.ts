@@ -70,7 +70,10 @@ export async function POST(req: Request) {
         return NextResponse.json({ init_point: response.init_point });
 
     } catch (error: any) {
-        console.error('Error creating subscription:', error);
-        return NextResponse.json({ error: error.message || 'Internal Error' }, { status: 500 });
+        console.error('Mercado Pago Error:', error);
+        return NextResponse.json({
+            error: 'Internal server error',
+            details: error.message || JSON.stringify(error)
+        }, { status: 500 });
     }
 }
