@@ -71,7 +71,9 @@ export default function PlanTab({ comercio, productosCount }: PlanTabProps) {
                 window.location.href = data.init_point;
             } else {
                 console.error('Subscription Error:', data);
-                alert(`Error al iniciar suscripción: ${data.error}\nDetalles: ${data.details || ''}`);
+                // Convertir objeto a string para que se lea en el alert
+                const detailsStr = typeof data.details === 'object' ? JSON.stringify(data.details, null, 2) : data.details;
+                alert(`Error al iniciar suscripción: ${data.error}\nDetalles: ${detailsStr}`);
                 setLoadingPlan(null);
             }
 

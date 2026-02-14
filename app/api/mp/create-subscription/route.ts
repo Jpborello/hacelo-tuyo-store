@@ -71,9 +71,13 @@ export async function POST(req: Request) {
 
     } catch (error: any) {
         console.error('Mercado Pago Error:', error);
+
+        // Intentar extraer la info útil de Mercado Pago
+        const errorDetails = error.cause || error.response?.data || error;
+
         return NextResponse.json({
-            error: 'Internal server error',
-            details: error.message || JSON.stringify(error)
+            error: error.message || 'Internal server error',
+            details: errorDetails
         }, { status: 500 });
     }
 }
