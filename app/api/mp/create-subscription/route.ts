@@ -91,26 +91,19 @@ export async function POST(req: Request) {
         return NextResponse.json({ init_point: response.init_point });
 
     } catch (error: any) {
-        // Logs solicitados explícitamente por el usuario
-        console.error("MP FULL ERROR ↓↓↓");
-        console.error(error);
-        console.error("MP RESPONSE DATA ↓↓↓");
-        console.error(error?.response?.data);
-        console.error("MP STATUS ↓↓↓");
-        console.error(error?.response?.status);
-
-        console.error('Mercado Pago Error at step ' + step + ':', error);
-
-        const errorDetails = {
-            message: error.message,
-            cause: error.cause,
-            response_data: error.response?.data, // Aquí suele estar el error de MP
-            stack: error.stack
-        };
+        console.error("========== MP RAW ERROR ==========")
+        console.error(error)
+        console.error("========== MP RESPONSE ==========")
+        console.error(error?.response)
+        console.error("========== MP DATA ==========")
+        console.error(error?.response?.data)
+        console.error("========== MP STATUS ==========")
+        console.error(error?.response?.status)
 
         return NextResponse.json({
-            error: `Failed at step: ${step}`,
-            details: errorDetails
+            error: 'Internal server error',
+            debug: error?.response?.data || error.message || error,
+            step_failed: step // Mantengo esto porque es útil
         }, { status: 500 });
     }
 }
