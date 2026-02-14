@@ -58,7 +58,7 @@ export async function POST(req: Request) {
                     transaction_amount: transactionAmount,
                     currency_id: 'ARS'
                 },
-                back_url: `${process.env.NEXT_PUBLIC_URL || 'https://tu-dominio.vercel.app'}/admin/dashboard?status=approved`,
+                back_url: `${process.env.NEXT_PUBLIC_URL || 'https://hacelo-tuyo-store-olhw.vercel.app'}/admin/dashboard?status=approved`,
                 status: 'pending'
             }
         });
