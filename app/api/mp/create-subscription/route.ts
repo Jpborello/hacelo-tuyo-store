@@ -66,7 +66,8 @@ export async function POST(req: Request) {
         step = 'mp_create_preapproval';
         const preapproval = new PreApproval(client);
 
-        const backUrl = `${process.env.NEXT_PUBLIC_URL || 'https://hacelo-tuyo-store-olhw.vercel.app'}/admin/dashboard?status=approved`;
+        // FIX: Hardcodeamos una URL válida y simple para evitar "Invalid value for back_url"
+        const backUrl = 'https://hacelo-tuyo-store-olhw.vercel.app/admin/dashboard';
         console.log('Back URL:', backUrl);
 
         const response = await preapproval.create({
