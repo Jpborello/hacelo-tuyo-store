@@ -1,16 +1,10 @@
 export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
-import { MercadoPagoConfig, PreApproval } from 'mercadopago';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export async function POST(req: Request) {
     try {
-        // Inicializar cliente Mercado Pago dentro del handler para asegurar env vars
-        const client = new MercadoPagoConfig({
-            accessToken: process.env.MP_ACCESS_TOKEN || ''
-        });
-
         const supabase = await createServerSupabaseClient();
         const { data: { user } } = await supabase.auth.getUser();
 
@@ -53,12 +47,10 @@ export async function POST(req: Request) {
 
         console.log(`Creating Ad-Hoc subscription for Plan: ${planId} (${amount} ARS)`);
 
-        // Crear solicitud de suscripción personalizada (Ad-Hoc)
-        const preapproval = new PreApproval(client);
-
-        const subscriptionData: any = {
-            payer_email: user.email || 'no-email@hacelotuyo.com.ar', // Fallback por si acaso
-            external_reference: comercio.id, // VINCULACIÓN CRÍTICA
+        // Crear solicitud de suscripción personalizada (Ad-Hoc) vía FETCH directo para evitar problemas de SDK
+        const subscriptionData = {
+            payer_email: user.email || 'no-email@hacelotuyo.com.ar',
+            external_reference: comercio.id,
             back_url: 'https://hacelotuyo.com.ar/admin/dashboard',
             reason: `Suscripción Plan ${planName} - Hacelo Tuyo`,
             auto_recurring: {
@@ -70,7 +62,20 @@ export async function POST(req: Request) {
             status: 'pending'
         };
 
-        const result = await preapproval.create({ body: subscriptionData });
+        const response = await fetch('https://api.mercadopago.com/preapproval', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`
+            },
+            body: JSON.stringify(subscriptionData)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(`MP API Error: ${result.message || JSON.stringify(result)}`);
+        }
 
         const finalUrl = result.init_point;
         console.log('Redirecting to Dynamic Init Point:', finalUrl);
@@ -79,16 +84,14 @@ export async function POST(req: Request) {
 
     } catch (error: any) {
         console.error("========== SUBSCRIPTION ERROR ==========")
-        console.error(JSON.stringify(error, null, 2))
+        console.error(error)
 
         return NextResponse.json({
             error: 'Internal server error',
             debug: {
-                message: error.message || 'Unknown error',
-                status: error.status || 500,
-                cause: error.cause || null,
-                stack: error.stack || null
+                message: error.message || String(error),
+                details: error
             }
-        }, { status: 500 }); // Siempre 500 al cliente, pero con info debug ahora
+        }, { status: 500 });
     }
 }

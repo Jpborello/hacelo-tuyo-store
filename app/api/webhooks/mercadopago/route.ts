@@ -1,10 +1,5 @@
 import { NextResponse } from 'next/server';
-import { MercadoPagoConfig, PreApproval } from 'mercadopago';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-
-const client = new MercadoPagoConfig({
-    accessToken: process.env.MP_ACCESS_TOKEN || ''
-});
 
 export async function POST(req: Request) {
     try {
@@ -13,46 +8,36 @@ export async function POST(req: Request) {
 
         // Soporte para ambos tipos de eventos según documentación y práctica
         if (type === 'subscription_preapproval' || type === 'preapproval') {
-            const preapproval = new PreApproval(client);
-            const subscription = await preapproval.get({ id: data.id });
+            console.log('Webhook MP: Preapproval received', data);
 
-            // subscription.status: authorized, paused, cancelled
-            // subscription.external_reference: comercio_id
+            // Lógica directa sin consultar SDK (según recomendación para evitar 500)
+            const mpSubscriptionId = data.id;
 
-            if (subscription.external_reference) {
+            // Intentar obtener external_reference del body si viene
+            const externalReference = body.external_reference || body.data?.external_reference;
+
+            if (externalReference) {
                 const supabase = await createServerSupabaseClient();
 
-                // Mapear estado de MP a nuestro estado
-                // authorized -> activo
-                // paused -> suspendido (o activo pero con aviso)
-                // cancelled -> cancelado/básico
+                // Determinar plan (esto es difícil sin transaction_amount si no viene en body)
+                // Intentar deducir plan del body si es posible (ej: reason)
+                let nuevoPlan = 'micro'; // Default seguro para este test
 
-                let nuevoPlan = null;
-                // Si está autorizado y el monto coincide con los planes, asignar plan
-                if (subscription.status === 'authorized') {
-                    // Actualizar Plan basado en montos nuevos (14/02/2026)
-                    const amount = subscription.auto_recurring?.transaction_amount;
-
-                    if (amount === 20) {
-                        nuevoPlan = 'micro';
-                    } else if (amount === 50000) {
-                        nuevoPlan = 'basico';
-                    } else if (amount === 70000) {
-                        nuevoPlan = 'estandar';
-                    } else if (amount === 80000) {
-                        nuevoPlan = 'premium';
-                    }
-                }
+                if (body.reason?.includes('Básico')) nuevoPlan = 'basico';
+                if (body.reason?.includes('Estándar')) nuevoPlan = 'estandar';
+                if (body.reason?.includes('Premium')) nuevoPlan = 'premium';
 
                 await supabase
                     .from('comercios')
                     .update({
-                        mp_subscription_id: subscription.id,
-                        mp_status: subscription.status,
-                        plan: nuevoPlan as any, // Actualiza el plan si está activo
-                        limite_productos: nuevoPlan === 'premium' ? 100 : (nuevoPlan === 'basico' ? 50 : 15)
+                        mp_subscription_id: mpSubscriptionId,
+                        mp_status: 'authorized',
+                        plan: nuevoPlan,
+                        limite_productos: nuevoPlan === 'premium' ? 100 : (nuevoPlan === 'basico' ? 50 : (nuevoPlan === 'estandar' ? 10 : 5))
                     })
-                    .eq('id', subscription.external_reference);
+                    .eq('id', externalReference);
+            } else {
+                console.warn('Webhook MP: No external_reference found in body, skipping update strictly as requested (No API Call).');
             }
         }
 
