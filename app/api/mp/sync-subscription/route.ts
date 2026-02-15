@@ -15,7 +15,7 @@ export async function POST() {
         // 0️⃣ Obtener comercio (necesitamos el ID para buscar en MP)
         const { data: comercio } = await supabase
             .from('comercios')
-            .select('id')
+            .select('id, creado_at')
             .eq('user_id', user.id)
             .single();
 
@@ -23,8 +23,7 @@ export async function POST() {
             return NextResponse.json({ error: 'Comercio not found' }, { status: 404 });
         }
 
-        // 1️⃣ Buscar suscripciones del usuario en MP por external_reference (MÁS SEGURO)
-        // Usamos comercio.id que es lo que mandamos al crear la suscripción
+        // 1️⃣ Buscar suscripciones del usuario en MP por external_reference
         const mpRes = await fetch(
             `https://api.mercadopago.com/preapproval/search?external_reference=${comercio.id}`,
             {
@@ -47,6 +46,19 @@ export async function POST() {
 
         if (!active) {
             return NextResponse.json({ status: 'no_active_subscription', message: 'Suscripción encontrada pero no autorizada' });
+        }
+
+        // 🛡️ VALIDACIÓN DE SEGURIDAD: Fecha de Suscripción vs Fecha de Comercio
+        // Evita que suscripciones viejas ("zombies") de pruebas anteriores se asignen a un comercio nuevo
+        const subscriptionDate = new Date(active.date_created);
+        const commerceDate = new Date(comercio.creado_at);
+
+        // Si la suscripción es anterior a la creación del comercio (con un margen de 1 min por clock skew), es inválida.
+        if (subscriptionDate.getTime() < commerceDate.getTime() - 60000) {
+            return NextResponse.json({
+                status: 'no_active_subscription',
+                message: 'Suscripción detectada pero es anterior a la creación del comercio (posible remanente de tests)'
+            });
         }
 
         // 3️⃣ Resolver plan por monto (convertido a número)
