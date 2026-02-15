@@ -22,7 +22,12 @@ export default function RegisterPage() {
 
     useEffect(() => {
         // Obtener plan seleccionado del localStorage
-        const plan = localStorage.getItem('selectedPlan') || 'estandar';
+        const storedPlan = localStorage.getItem('selectedPlan');
+
+        // Validar que sea un plan permitido (evitar 'micro' u otros valores de test/legacy)
+        const validPlans = ['basico', 'estandar', 'premium'];
+        const plan = (storedPlan && validPlans.includes(storedPlan)) ? storedPlan : 'estandar';
+
         setSelectedPlan(plan);
     }, []);
 
