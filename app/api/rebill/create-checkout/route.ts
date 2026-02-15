@@ -36,12 +36,22 @@ export async function POST(req: Request) {
         console.log(`Creating Rebill Checkout for Commerce: ${comercio.id}, Plan: ${planId} (${targetPlan})`);
 
         // Llamada a Rebill para generar el Checkout
+        const start = Date.now();
+        console.log('Sending request to Rebill API...');
+
+        const orgId = process.env.REBILL_ORGANIZATION_ID;
+        if (!orgId) {
+            console.error('Missing REBILL_ORGANIZATION_ID');
+            return NextResponse.json({ error: 'Configuration Error: Missing Organization ID' }, { status: 500 });
+        }
+
         const response = await fetch('https://api.rebill.com/v2/checkout', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${process.env.REBILL_SECRET_KEY}`, // Usamos SECRET KEY
+                'Authorization': `Bearer ${process.env.REBILL_SECRET_KEY}`,
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'organization_id': orgId // Header requerido por Rebill
             },
             body: JSON.stringify({
                 planId: targetPlan,
