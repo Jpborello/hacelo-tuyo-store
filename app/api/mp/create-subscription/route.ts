@@ -8,6 +8,13 @@ const client = new MercadoPagoConfig({
     accessToken: process.env.MP_ACCESS_TOKEN || ''
 });
 
+// IDs de Planes generados el 14/02/2026
+const PLAN_IDS = {
+    'basico': 'fe2bdde38c084335ab9e5fc87bf8b0fc',
+    'estandar': 'b6d7283d9dde4f08839001ca330fb676',
+    'premium': '0a847dfe67ae41e9b653e54d3917eba1'
+};
+
 export async function POST(req: Request) {
     let step = 'init';
     try {
@@ -47,42 +54,47 @@ export async function POST(req: Request) {
             accessToken: process.env.MP_ACCESS_TOKEN
         });
 
-        let transactionAmount = 0;
-        let reason = '';
+        // Validar Plan
+        const preapprovalPlanId = PLAN_IDS[planId as keyof typeof PLAN_IDS];
+        if (!preapprovalPlanId) {
+            return NextResponse.json({ error: `Invalid plan ID: ${planId}` }, { status: 400 });
+        }
 
-        if (planId === 'basico') {
-            transactionAmount = 50000;
-            reason = 'Plan Básico (Hacelo Tuyo)';
-        } else if (planId === 'estandar') {
-            transactionAmount = 70000;
-            reason = 'Plan Estándar (Hacelo Tuyo)';
-        } else if (planId === 'premium') {
-            transactionAmount = 80000;
-            reason = 'Plan Premium (Hacelo Tuyo)';
+        step = 'determine_payer_email';
+        // Determinar si es TEST o PROD
+        const isTest = process.env.MP_ACCESS_TOKEN.startsWith('TEST-');
+        let payerEmail = '';
+
+        if (isTest) {
+            // En modo TEST, usamos el test user hardcodeado que sabemos que funciona o la variable
+            payerEmail = process.env.MP_TEST_PAYER_EMAIL || 'test_user_2520602603@testuser.com';
+            console.log('TEST MODE: Using Test Payer Email:', payerEmail);
         } else {
-            return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
+            // En PROD, usamos el email del usuario real o el que mande el frontend
+            payerEmail = email || user.email;
+            console.log('PROD MODE: Using User Email:', payerEmail);
+        }
+
+        if (!payerEmail) {
+            return NextResponse.json({ error: 'payer_email is missing' }, { status: 400 });
         }
 
         step = 'mp_create_preapproval';
         const preapproval = new PreApproval(client);
 
-        // FIX: Hardcodeamos una URL válida y simple para evitar "Invalid value for back_url"
+        // URL fija que sabemos que funciona
         const backUrl = 'https://hacelo-tuyo-store-olhw.vercel.app/admin/dashboard';
         console.log('Back URL:', backUrl);
 
+        console.log('Creating subscription with Plan ID:', preapprovalPlanId);
+
         const response = await preapproval.create({
             body: {
-                reason: reason,
-                external_reference: comercio.id,
-                payer_email: "test_user_2520602603@testuser.com",
-                auto_recurring: {
-                    frequency: 1,
-                    frequency_type: 'months',
-                    transaction_amount: transactionAmount,
-                    currency_id: 'ARS'
-                },
+                preapproval_plan_id: preapprovalPlanId,
+                payer_email: payerEmail,
                 back_url: backUrl,
-                status: 'pending'
+                status: 'pending', // o 'authorized' según la doc, pero pending suele ser el default para iniciar flujo
+                external_reference: comercio.id
             }
         });
 
@@ -99,8 +111,6 @@ export async function POST(req: Request) {
         console.error(error?.response)
         console.error("========== MP DATA ==========")
         console.error(error?.response?.data)
-        console.error("========== MP STATUS ==========")
-        console.error(error?.response?.status)
 
         return NextResponse.json({
             error: 'Internal server error',
