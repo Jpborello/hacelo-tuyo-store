@@ -7,7 +7,9 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 const PLAN_URLS = {
     'basico': 'https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=fe2bdde38c084335ab9e5fc87bf8b0fc',
     'estandar': 'https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=b6d7283d9dde4f08839001ca330fb676',
-    'premium': 'https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=0a847dfe67ae41e9b653e54d3917eba1'
+    'premium': 'https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=0a847dfe67ae41e9b653e54d3917eba1',
+    // Plan de Prueba para Producción (20 ARS)
+    'micro': 'https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=9dc55aabcb894382b10de65b5c09fdc7'
 };
 
 export async function POST(req: Request) {

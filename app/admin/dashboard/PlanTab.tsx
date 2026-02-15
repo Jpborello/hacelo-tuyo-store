@@ -37,6 +37,15 @@ const PLANS = [
         features: ['Hasta 100 productos', 'Catálogo online personalizado', 'Gestión de pedidos', 'WhatsApp integrado', 'Soporte 24/7', 'Estadísticas avanzadas', 'Reportes personalizados'],
         color: 'orange',
         icon: Shield
+    },
+    {
+        id: 'micro',
+        name: 'Plan Micro (Prueba)',
+        price: '$20/mes',
+        limit: 5,
+        features: ['Hasta 5 productos', 'Test de Pagos Real', 'Soporte Básico'],
+        color: 'gray',
+        icon: Check
     }
 ];
 
