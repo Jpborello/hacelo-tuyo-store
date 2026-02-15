@@ -104,7 +104,12 @@ export async function POST(req: Request) {
 
         return NextResponse.json({
             error: 'Internal server error',
-            debug: error?.response?.data || error.message || error,
+            debug: {
+                message: error.message || 'Unknown error',
+                response: error.response?.data || null,
+                status: error.response?.status || null,
+                stack: error.stack || null
+            },
             step_failed: step
         }, { status: 500 });
     }
