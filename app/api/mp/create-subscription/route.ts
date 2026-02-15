@@ -10,7 +10,6 @@ const client = new MercadoPagoConfig({
 });
 
 // IDs de Planes (Preapproval Plan IDs)
-// Estos se usaban en URLs estáticas, ahora los usamos para crear suscripciones dinámicas
 const PLAN_IDS = {
     'basico': 'fe2bdde38c084335ab9e5fc87bf8b0fc',
     'estandar': 'b6d7283d9dde4f08839001ca330fb676',
@@ -42,8 +41,6 @@ export async function POST(req: Request) {
         }
 
         // Validar Plan ID
-        // Ahora usamos directamente el ID del plan, no la URL completa
-        // Extraemos el ID si PLAN_IDS devuelve el ID directo
         const mpPlanId = PLAN_IDS[planId as keyof typeof PLAN_IDS];
 
         if (!mpPlanId) {
@@ -52,21 +49,15 @@ export async function POST(req: Request) {
 
         console.log(`Creating dynamic subscription for Plan: ${planId} (${mpPlanId})`);
 
-        // Crear una solicitud de suscripción personalizada (Preapproval)
+        // Crear una solicitud de suscripción personalizada
         const preapproval = new PreApproval(client);
 
-        const subscriptionData = {
+        const subscriptionData: any = {
             preapproval_plan_id: mpPlanId,
-            payer_email: user.email, // Email del usuario logueado en la App
-            external_reference: comercio.id, // ¡ESTO ES LO IMPORTANTE! Vincula el pago al comercio
+            payer_email: user.email,
+            external_reference: comercio.id, // VINCULACIÓN CRÍTICA
             back_url: 'https://hacelotuyo.com.ar/admin/dashboard',
             reason: `Suscripción ${planId.toUpperCase()} - Hacelo Tuyo`,
-            auto_recurring: {
-                frequency: 1,
-                frequency_type: 'months',
-                transaction_amount: planId === 'micro' ? 20 : (planId === 'basico' ? 50000 : (planId === 'estandar' ? 70000 : 80000)),
-                currency_id: 'ARS'
-            },
             status: 'pending'
         };
 
@@ -85,7 +76,8 @@ export async function POST(req: Request) {
             error: 'Internal server error',
             debug: {
                 message: error.message || 'Unknown error',
-                stack: error.stack || null
+                stack: error.stack || null,
+                details: error.cause || error
             }
         }, { status: 500 });
     }
