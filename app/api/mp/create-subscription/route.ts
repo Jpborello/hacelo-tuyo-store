@@ -39,12 +39,8 @@ export async function POST(req: Request) {
         }
 
         // Construir URL final con external_reference para saber quién pagó
-        // Mercado Pago permite pasar status=approved en back_url si se configura en el plan,
-        // pero aquí usamos la URL del checkout.
-        // Para traquear el pago, lo ideal es concatenar external_reference.
-        // NOTA: Los links de suscripción soportan ?external_reference=...
-
-        const finalUrl = `${planUrl}&external_reference=${comercio.id}&payer_email=${user.email}`;
+        // UPDATE: Quitamos payer_email porque MP puede ignorarlo en querystring
+        const finalUrl = `${planUrl}&external_reference=${comercio.id}`;
 
         console.log('Redirecting to Plan Init Point:', finalUrl);
 
