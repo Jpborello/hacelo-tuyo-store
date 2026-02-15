@@ -11,7 +11,8 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { type, data } = body;
 
-        if (type === 'subscription_preapproval') {
+        // Soporte para ambos tipos de eventos según documentación y práctica
+        if (type === 'subscription_preapproval' || type === 'preapproval') {
             const preapproval = new PreApproval(client);
             const subscription = await preapproval.get({ id: data.id });
 
