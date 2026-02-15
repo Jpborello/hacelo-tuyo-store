@@ -77,6 +77,7 @@ export async function POST() {
                 limite_productos: limite,
                 mp_subscription_id: active.id,
                 mp_status: active.status,
+                mp_next_payment_date: active.next_payment_date,
             })
             .eq('id', comercio.id)
             .select();

@@ -140,7 +140,9 @@ export default function PlanTab({ comercio, productosCount }: PlanTabProps) {
                             </span>
                         )}
                         <p className="text-sm text-gray-500 mt-1">
-                            Tu plan se renueva el día 1 de cada mes.
+                            {comercio.mp_next_payment_date
+                                ? `Tu plan se renueva el ${new Date(comercio.mp_next_payment_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}.`
+                                : 'Tu plan se renueva mensualmente automáticamente.'}
                         </p>
                     </div>
 

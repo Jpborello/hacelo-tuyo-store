@@ -26,6 +26,7 @@ export interface Comercio {
     proximo_pago?: string | null;
     meses_sin_pagar?: number;
     mp_preapproval_id?: string | null;
+    mp_next_payment_date?: string | null;
     tiene_metodo_pago?: boolean;
     notas_admin?: string | null;
 }
