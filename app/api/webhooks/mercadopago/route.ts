@@ -29,11 +29,16 @@ export async function POST(req: Request) {
                 let nuevoPlan = null;
                 // Si está autorizado y el monto coincide con los planes, asignar plan
                 if (subscription.status === 'authorized') {
-                    // Determinar plan basado en el monto o reason
-                    // Esto es básico, idealmente guardaríamos el plan_id en metadata
-                    if (subscription.auto_recurring?.transaction_amount === 15000) {
+                    // Actualizar Plan basado en montos nuevos (14/02/2026)
+                    const amount = subscription.auto_recurring?.transaction_amount;
+
+                    if (amount === 20) {
+                        nuevoPlan = 'micro';
+                    } else if (amount === 50000) {
                         nuevoPlan = 'basico';
-                    } else if (subscription.auto_recurring?.transaction_amount === 25000) {
+                    } else if (amount === 70000) {
+                        nuevoPlan = 'estandar';
+                    } else if (amount === 80000) {
                         nuevoPlan = 'premium';
                     }
                 }
