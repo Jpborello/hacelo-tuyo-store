@@ -12,9 +12,21 @@ export async function POST() {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // 1️⃣ Buscar suscripciones del usuario en MP
+        // 0️⃣ Obtener comercio (necesitamos el ID para buscar en MP)
+        const { data: comercio } = await supabase
+            .from('comercios')
+            .select('id')
+            .eq('user_id', user.id)
+            .single();
+
+        if (!comercio) {
+            return NextResponse.json({ error: 'Comercio not found' }, { status: 404 });
+        }
+
+        // 1️⃣ Buscar suscripciones del usuario en MP por external_reference (MÁS SEGURO)
+        // Usamos comercio.id que es lo que mandamos al crear la suscripción
         const mpRes = await fetch(
-            `https://api.mercadopago.com/preapproval/search?payer_email=${encodeURIComponent(user.email)}`,
+            `https://api.mercadopago.com/preapproval/search?external_reference=${comercio.id}`,
             {
                 headers: {
                     Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`,
@@ -25,7 +37,7 @@ export async function POST() {
         const mpData = await mpRes.json();
 
         if (!mpData?.results?.length) {
-            return NextResponse.json({ status: 'no_subscription' });
+            return NextResponse.json({ status: 'no_subscription', message: 'No se encontró suscripción vinculada' });
         }
 
         // 2️⃣ Tomar la suscripción activa más reciente
@@ -34,11 +46,11 @@ export async function POST() {
         );
 
         if (!active) {
-            return NextResponse.json({ status: 'no_active_subscription' });
+            return NextResponse.json({ status: 'no_active_subscription', message: 'Suscripción encontrada pero no autorizada' });
         }
 
-        // 3️⃣ Resolver plan por monto
-        const amount = active.auto_recurring?.transaction_amount;
+        // 3️⃣ Resolver plan por monto (convertido a número)
+        const amount = Number(active.auto_recurring?.transaction_amount);
 
         let plan = 'basico';
         let limite = 15;
@@ -57,18 +69,8 @@ export async function POST() {
             limite = 100;
         }
 
-        // 4️⃣ Actualizar comercio
-        const { data: comercio } = await supabase
-            .from('comercios')
-            .select('id')
-            .eq('user_id', user.id)
-            .single();
-
-        if (!comercio) {
-            return NextResponse.json({ error: 'Comercio not found' }, { status: 404 });
-        }
-
-        await supabase
+        // 4️⃣ Actualizar comercio en BD con verificación
+        const { data: updatedData, error: updateError } = await supabase
             .from('comercios')
             .update({
                 plan,
@@ -76,7 +78,18 @@ export async function POST() {
                 mp_subscription_id: active.id,
                 mp_status: active.status,
             })
-            .eq('id', comercio.id);
+            .eq('id', comercio.id)
+            .select();
+
+        if (updateError) {
+            console.error('UPDATE ERROR', updateError);
+            return NextResponse.json({ error: 'DB update failed', details: updateError }, { status: 500 });
+        }
+
+        if (!updatedData || updatedData.length === 0) {
+            console.error('NO ROW UPDATED - RLS or ID mismatch');
+            return NextResponse.json({ error: 'No se pudo actualizar el comercio' }, { status: 500 });
+        }
 
         return NextResponse.json({
             status: 'updated',
