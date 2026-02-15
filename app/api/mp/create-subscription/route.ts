@@ -1,3 +1,5 @@
+export const runtime = 'nodejs';
+
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, PreApproval } from 'mercadopago';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
@@ -39,7 +41,6 @@ export async function POST(req: Request) {
             throw new Error('MP_ACCESS_TOKEN is missing');
         }
 
-        // Loguear parcialmente el token para debug
         console.log('Using MP Token:', process.env.MP_ACCESS_TOKEN.substring(0, 10) + '...');
 
         const client = new MercadoPagoConfig({
@@ -62,28 +63,6 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
         }
 
-
-
-        step = 'determine_payer_email';
-        // Determinar si es TEST o PROD
-        const isTest = process.env.MP_ACCESS_TOKEN.startsWith('TEST-');
-        let payerEmail = '';
-
-        if (isTest) {
-            // En modo TEST, forzamos el uso de un email de prueba válido
-            // Prioridad: variable de entorno > hardcoded fallback
-            payerEmail = process.env.MP_TEST_PAYER_EMAIL || 'test_user_492421908@testuser.com';
-            console.log('TEST MODE: Using Test Payer Email:', payerEmail);
-        } else {
-            // En PROD, usamos el email del usuario real o el que mande el frontend
-            payerEmail = email || user.email;
-            console.log('PROD MODE: Using User Email:', payerEmail);
-        }
-
-        if (!payerEmail) {
-            return NextResponse.json({ error: 'payer_email is missing' }, { status: 400 });
-        }
-
         step = 'mp_create_preapproval';
         const preapproval = new PreApproval(client);
 
@@ -94,7 +73,7 @@ export async function POST(req: Request) {
             body: {
                 reason: reason,
                 external_reference: comercio.id,
-                payer_email: payerEmail,
+                payer_email: "test_user_2520602603@testuser.com",
                 auto_recurring: {
                     frequency: 1,
                     frequency_type: 'months',
@@ -125,7 +104,7 @@ export async function POST(req: Request) {
         return NextResponse.json({
             error: 'Internal server error',
             debug: error?.response?.data || error.message || error,
-            step_failed: step // Mantengo esto porque es útil
+            step_failed: step
         }, { status: 500 });
     }
 }
