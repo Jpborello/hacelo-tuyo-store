@@ -39,25 +39,26 @@ export async function POST() {
             return NextResponse.json({ status: 'no_subscription', message: 'No se encontró suscripción vinculada' });
         }
 
-        // 2️⃣ Tomar la suscripción activa más reciente
-        const active = mpData.results.find(
-            (s: any) => s.status === 'authorized'
-        );
+        // 2️⃣ Tomar la suscripción activa más reciente que cumpla con los criterios estrictos
+        const commerceTime = new Date(comercio.creado_at).getTime();
+
+        const active = mpData.results.find((s: any) => {
+            const subTime = new Date(s.date_created).getTime();
+            // Validación estricta:
+            // 1. Status autorizado
+            // 2. ID de comercio coincide (por seguridad si la API devuelve basura)
+            // 3. Fecha de suscripción posterior a fecha de comercio (evita zombies de test)
+            return (
+                s.status === 'authorized' &&
+                s.external_reference === comercio.id &&
+                subTime >= (commerceTime - 60000) // 1 min tolerancia por reloj del servidor
+            );
+        });
 
         if (!active) {
-            return NextResponse.json({ status: 'no_active_subscription', message: 'Suscripción encontrada pero no autorizada' });
-        }
-
-        // 🛡️ VALIDACIÓN DE SEGURIDAD: Fecha de Suscripción vs Fecha de Comercio
-        // Evita que suscripciones viejas ("zombies") de pruebas anteriores se asignen a un comercio nuevo
-        const subscriptionDate = new Date(active.date_created);
-        const commerceDate = new Date(comercio.creado_at);
-
-        // Si la suscripción es anterior a la creación del comercio (con un margen de 1 min por clock skew), es inválida.
-        if (subscriptionDate.getTime() < commerceDate.getTime() - 60000) {
             return NextResponse.json({
                 status: 'no_active_subscription',
-                message: 'Suscripción detectada pero es anterior a la creación del comercio (posible remanente de tests)'
+                message: 'No se encontró suscripción válida y reciente para este comercio'
             });
         }
 
