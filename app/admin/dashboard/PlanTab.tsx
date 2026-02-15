@@ -11,6 +11,15 @@ interface PlanTabProps {
 
 const PLANS = [
     {
+        id: 'prueba',
+        name: 'Prueba Gratis',
+        price: 'Gratis',
+        limit: 10,
+        features: ['Hasta 10 productos', '15 días de prueba', 'Sin tarjeta de crédito'],
+        color: 'green',
+        icon: Store
+    },
+    {
         id: 'basico',
         name: 'Básico',
         price: '$50.000/mes',
@@ -37,15 +46,6 @@ const PLANS = [
         features: ['Hasta 100 productos', 'Catálogo online personalizado', 'Gestión de pedidos', 'WhatsApp integrado', 'Soporte 24/7', 'Estadísticas avanzadas', 'Reportes personalizados'],
         color: 'orange',
         icon: Shield
-    },
-    {
-        id: 'micro',
-        name: 'Plan Micro (Prueba)',
-        price: '$20/mes',
-        limit: 5,
-        features: ['Hasta 5 productos', 'Test de Pagos Real', 'Soporte Básico'],
-        color: 'gray',
-        icon: Check
     }
 ];
 
@@ -73,7 +73,7 @@ export default function PlanTab({ comercio, productosCount }: PlanTabProps) {
         syncSubscription();
     }, [router]);
 
-    const currentPlan = PLANS.find(p => p.id === (comercio.plan || 'free')) || PLANS[0];
+    const currentPlan = PLANS.find(p => p.id === (comercio.plan || 'prueba')) || PLANS[0];
     const isLimitReached = productosCount >= currentPlan.limit;
     const usagePercent = currentPlan.limit === 1000
         ? Math.min(100, (productosCount / 100) * 10) // Falso porcentaje para ilimitado
@@ -132,8 +132,12 @@ export default function PlanTab({ comercio, productosCount }: PlanTabProps) {
                         <h3 className="text-lg font-semibold text-gray-900 mb-1">
                             Plan Actual: <span className="text-indigo-600 font-bold uppercase">{currentPlan.name}</span>
                         </h3>
-                        {comercio.mp_status && (
-                            <span className={`text-xs px-2 py-1 rounded-full uppercase ml-2 ${comercio.mp_status === 'active' ? 'bg-green-100 text-green-700' :
+                        {comercio.plan === 'prueba' ? (
+                            <span className="text-xs px-2 py-1 rounded-full uppercase ml-2 bg-green-100 text-green-700">
+                                Prueba Activa
+                            </span>
+                        ) : comercio.mp_status && (
+                            <span className={`text-xs px-2 py-1 rounded-full uppercase ml-2 ${comercio.mp_status === 'active' || comercio.mp_status === 'authorized' ? 'bg-green-100 text-green-700' :
                                 comercio.mp_status === 'paused' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
                                 }`}>
                                 {comercio.mp_status}
