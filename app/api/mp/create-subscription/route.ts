@@ -25,19 +25,20 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Comercio not found' }, { status: 404 });
         }
 
-        // Definir montos manualmente (Estrategia Ad-Hoc)
+        // Definir montos manualmente (Estrategia Ad-Hoc Simplificada y Sanitizada)
         let amount = 0;
         let planName = '';
 
+        // Nombres sin tildes y montos enteros
         if (planId === 'micro') {
             amount = 20;
             planName = 'Micro (Prueba)';
         } else if (planId === 'basico') {
             amount = 50000;
-            planName = 'Básico';
+            planName = 'Basico';
         } else if (planId === 'estandar') {
             amount = 70000;
-            planName = 'Estándar';
+            planName = 'Estandar';
         } else if (planId === 'premium') {
             amount = 80000;
             planName = 'Premium';
@@ -47,16 +48,21 @@ export async function POST(req: Request) {
 
         console.log(`Creating Ad-Hoc subscription for Plan: ${planId} (${amount} ARS)`);
 
-        // Crear solicitud de suscripción personalizada (Ad-Hoc) vía FETCH directo para evitar problemas de SDK
+        // Crear solicitud de suscripción personalizada (Ad-Hoc) vía FETCH directo
+        // IMPORTANTE: payer_email es opcional en preapproval si no se manda card_token_id?
+        // La doc dice que es requerido, pero a veces MP acepta cualquiera.
+        // Usaremos un email dummy si user.email falla para evitar bloqueos de mismo usuario.
+        // El usuario REAL se loguea en el checkout.
+
         const subscriptionData = {
-            payer_email: user.email || 'no-email@hacelotuyo.com.ar',
+            payer_email: user.email || 'noreply@hacelotuyo.com.ar',
             external_reference: comercio.id,
             back_url: 'https://hacelotuyo.com.ar/admin/dashboard',
-            reason: `Suscripción Plan ${planName} - Hacelo Tuyo`,
+            reason: `Suscripcion Plan ${planName} - Hacelo Tuyo`,
             auto_recurring: {
                 frequency: 1,
                 frequency_type: 'months',
-                transaction_amount: amount,
+                transaction_amount: Math.floor(amount),
                 currency_id: 'ARS'
             },
             status: 'pending'
@@ -71,10 +77,19 @@ export async function POST(req: Request) {
             body: JSON.stringify(subscriptionData)
         });
 
-        const result = await response.json();
+        // Intentar parsear respuesta, capturando si no es JSON
+        const responseText = await response.text();
+        let result;
+        try {
+            result = JSON.parse(responseText);
+        } catch (e) {
+            console.error('MP Response is not JSON:', responseText);
+            throw new Error(`MP API returned Non-JSON: ${responseText.substring(0, 100)}...`);
+        }
 
         if (!response.ok) {
-            throw new Error(`MP API Error: ${result.message || JSON.stringify(result)}`);
+            // Devolver error detallado de MP
+            throw new Error(`MP API Error (${response.status}): ${result.message || JSON.stringify(result)}`);
         }
 
         const finalUrl = result.init_point;
@@ -90,7 +105,7 @@ export async function POST(req: Request) {
             error: 'Internal server error',
             debug: {
                 message: error.message || String(error),
-                details: error
+                details: error // Puede ser un objeto complejo
             }
         }, { status: 500 });
     }

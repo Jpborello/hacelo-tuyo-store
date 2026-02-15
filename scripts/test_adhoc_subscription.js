@@ -12,7 +12,7 @@ async function testAdHoc() {
         const preapproval = new PreApproval(client);
 
         const subscriptionData = {
-            payer_email: 'test_user_123@test.com', // Email dummy
+            payer_email: 'nerogamerr136@gmail.com',
             external_reference: 'REF_TEST_123',
             back_url: 'https://hacelotuyo.com.ar/admin/dashboard',
             reason: 'Suscripción Micro (Prueba) - Hacelo Tuyo',
