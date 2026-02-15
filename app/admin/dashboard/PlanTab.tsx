@@ -92,21 +92,20 @@ export default function PlanTab({ comercio, productosCount }: PlanTabProps) {
         try {
             setLoadingPlan(planId);
 
-            const response = await fetch('/api/mp/create-subscription', {
+            const response = await fetch('/api/rebill/create-checkout', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    planId: planId,
-                    email: '' // El backend usará el email del usuario logueado
+                    planId: planId
                 }),
             });
 
             const data = await response.json();
 
             if (data.init_point) {
-                // Redirigir a Mercado Pago
+                // Redirigir a Rebill
                 window.location.href = data.init_point;
             } else {
                 console.error('Subscription Error:', data);
@@ -114,7 +113,7 @@ export default function PlanTab({ comercio, productosCount }: PlanTabProps) {
                 const errorData = data.details || data.debug || data.error || 'Error desconocido';
                 const detailsStr = typeof errorData === 'object' ? JSON.stringify(errorData, null, 2) : errorData;
 
-                alert(`Error al iniciar suscripción: ${data.error}\n\nDetalles:\n${detailsStr}`);
+                alert(`Error al iniciar suscripción: ${data.error || 'Error'}\n\nDetalles:\n${detailsStr}`);
                 setLoadingPlan(null);
             }
 
