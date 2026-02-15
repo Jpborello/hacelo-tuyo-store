@@ -52,22 +52,22 @@ export async function POST() {
         // 3️⃣ Resolver plan por monto (convertido a número)
         const amount = Number(active.auto_recurring?.transaction_amount);
 
-        let plan = 'basico';
-        let limite = 15;
+        const VALID_PLANS: Record<number, { plan: string; limite: number }> = {
+            50000: { plan: 'basico', limite: 20 },
+            70000: { plan: 'estandar', limite: 50 },
+            80000: { plan: 'premium', limite: 100 }
+        };
 
-        if (amount === 20) {
-            plan = 'micro';
-            limite = 5;
-        } else if (amount === 50000) {
-            plan = 'basico';
-            limite = 50;
-        } else if (amount === 70000) {
-            plan = 'estandar';
-            limite = 75;
-        } else if (amount === 80000) {
-            plan = 'premium';
-            limite = 100;
+        const planInfo = VALID_PLANS[amount];
+
+        if (!planInfo) {
+            return NextResponse.json({
+                status: 'no_active_subscription',
+                message: 'Suscripción no válida o de prueba'
+            });
         }
+
+        const { plan, limite } = planInfo;
 
         // 4️⃣ Actualizar comercio en BD con verificación
         const { data: updatedData, error: updateError } = await supabase
