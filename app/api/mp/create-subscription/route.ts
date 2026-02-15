@@ -35,16 +35,39 @@ export async function POST(req: Request) {
         }
 
         // Validar Plan
-        const planUrl = PLAN_URLS[planId as keyof typeof PLAN_URLS];
-        if (!planUrl) {
-            return NextResponse.json({ error: `Invalid plan ID: ${planId}` }, { status: 400 });
+        // Validar Plan ID
+        const selectedPlanId = body.planId;
+        const mpPlanId = PLAN_URLS[selectedPlanId as keyof typeof PLAN_URLS]?.split('preapproval_plan_id=')[1];
+
+        if (!mpPlanId) {
+            return NextResponse.json({ error: `Invalid plan ID: ${selectedPlanId}` }, { status: 400 });
         }
 
-        // Construir URL final con external_reference para saber quién pagó
-        // UPDATE: Quitamos payer_email porque MP puede ignorarlo en querystring
-        const finalUrl = `${planUrl}&external_reference=${comercio.id}`;
+        console.log(`Creating dynamic subscription for Plan: ${selectedPlanId} (${mpPlanId})`);
 
-        console.log('Redirecting to Plan Init Point:', finalUrl);
+        // Crear una solicitud de suscripción personalizada
+        const preapproval = new PreApproval(client);
+
+        const subscriptionData = {
+            preapproval_plan_id: mpPlanId,
+            payer_email: user.email, // Email sugerido, pero puede cambiarse en checkout
+            external_reference: comercio.id, // ¡ESTO ES LO IMPORTANTE! Vincula el pago al comercio
+            back_url: `https://hacelotuyo.com.ar/admin/dashboard`,
+            reason: `Suscripción ${selectedPlanId.toUpperCase()} - Hacelo Tuyo`,
+            auto_recurring: {
+                frequency: 1,
+                frequency_type: 'months',
+                organization_id: 'HACELOTUYO', // Opcional
+                transaction_amount: selectedPlanId === 'micro' ? 20 : (selectedPlanId === 'basico' ? 50000 : (selectedPlanId === 'estandar' ? 70000 : 80000)),
+                currency_id: 'ARS'
+            },
+            status: 'pending' // Estado inicial
+        };
+
+        const result = await preapproval.create({ body: subscriptionData });
+
+        const finalUrl = result.init_point;
+        console.log('Redirecting to Dynamic Init Point:', finalUrl);
 
         return NextResponse.json({ init_point: finalUrl });
 
