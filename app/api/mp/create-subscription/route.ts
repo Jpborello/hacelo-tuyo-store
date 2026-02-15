@@ -36,12 +36,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
     }
 
-    // Determinar monto según plan
-    let amount = 50000;
-    if (planId === 'micro') amount = 20;
-    if (planId === 'estandar') amount = 70000;
-    if (planId === 'premium') amount = 80000;
-
     // Crear suscripción dinámicamente vía API
     try {
         const mpRes = await fetch('https://api.mercadopago.com/preapproval', {
@@ -56,13 +50,9 @@ export async function POST(req: Request) {
                 external_reference: comercio.id, // VINCULACIÓN CLAVE
                 payer_email: user.email,
                 back_url: 'https://hacelotuyo.com.ar/admin/dashboard',
-                auto_recurring: {
-                    frequency: 1,
-                    frequency_type: 'months',
-                    transaction_amount: amount,
-                    currency_id: 'ARS'
-                },
-                status: 'pending'
+                status: 'pending' // <--- CAMBIO VITAL: "pending" no pide tarjeta
+                // QUITAMOS el objeto 'auto_recurring' de aquí 
+                // porque ya viene definido dentro del 'preapproval_plan_id'
             })
         });
 
