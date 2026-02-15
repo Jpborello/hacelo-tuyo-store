@@ -9,15 +9,6 @@ const client = new MercadoPagoConfig({
     accessToken: process.env.MP_ACCESS_TOKEN || ''
 });
 
-// IDs de Planes (Preapproval Plan IDs)
-const PLAN_IDS = {
-    'basico': 'fe2bdde38c084335ab9e5fc87bf8b0fc',
-    'estandar': 'b6d7283d9dde4f08839001ca330fb676',
-    'premium': '0a847dfe67ae41e9b653e54d3917eba1',
-    // Plan de Prueba (20 ARS)
-    'micro': '9dc55aabcb894382b10de65b5c09fdc7'
-};
-
 export async function POST(req: Request) {
     try {
         const supabase = await createServerSupabaseClient();
@@ -40,24 +31,43 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Comercio not found' }, { status: 404 });
         }
 
-        // Validar Plan ID
-        const mpPlanId = PLAN_IDS[planId as keyof typeof PLAN_IDS];
+        // Definir montos manualmente (Estrategia Ad-Hoc para garantizar external_reference e init_point)
+        let amount = 0;
+        let planName = '';
 
-        if (!mpPlanId) {
+        if (planId === 'micro') {
+            amount = 20;
+            planName = 'Micro (Prueba)';
+        } else if (planId === 'basico') {
+            amount = 50000;
+            planName = 'Básico';
+        } else if (planId === 'estandar') {
+            amount = 70000;
+            planName = 'Estándar';
+        } else if (planId === 'premium') {
+            amount = 80000;
+            planName = 'Premium';
+        } else {
             return NextResponse.json({ error: `Invalid plan ID: ${planId}` }, { status: 400 });
         }
 
-        console.log(`Creating dynamic subscription for Plan: ${planId} (${mpPlanId})`);
+        console.log(`Creating Ad-Hoc subscription for Plan: ${planId} (${amount} ARS)`);
 
-        // Crear una solicitud de suscripción personalizada
+        // Crear solicitud de suscripción personalizada (Ad-Hoc)
+        // Esto genera un init_point y permite external_reference sin exigir card_token_id
         const preapproval = new PreApproval(client);
 
         const subscriptionData: any = {
-            preapproval_plan_id: mpPlanId,
             payer_email: user.email,
             external_reference: comercio.id, // VINCULACIÓN CRÍTICA
             back_url: 'https://hacelotuyo.com.ar/admin/dashboard',
-            reason: `Suscripción ${planId.toUpperCase()} - Hacelo Tuyo`,
+            reason: `Suscripción Plan ${planName} - Hacelo Tuyo`,
+            auto_recurring: {
+                frequency: 1,
+                frequency_type: 'months',
+                transaction_amount: amount,
+                currency_id: 'ARS'
+            },
             status: 'pending'
         };
 
