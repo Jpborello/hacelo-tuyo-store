@@ -14,7 +14,7 @@ export interface Comercio {
     user_id: string;
     // Campos de suscripción
     estado?: 'pendiente' | 'activo' | 'bloqueado' | 'eliminado';
-    plan?: 'basico' | 'estandar' | 'premium';
+    plan?: 'prueba' | 'basico' | 'estandar' | 'premium';
     limite_productos: number;
     // Mercado Pago Fields
     mp_subscription_id?: string | null;

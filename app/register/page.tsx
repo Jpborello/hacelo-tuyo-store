@@ -25,7 +25,7 @@ export default function RegisterPage() {
         const storedPlan = localStorage.getItem('selectedPlan');
 
         // Validar que sea un plan permitido (evitar 'micro' u otros valores de test/legacy)
-        const validPlans = ['basico', 'estandar', 'premium'];
+        const validPlans = ['prueba', 'basico', 'estandar', 'premium'];
         const plan = (storedPlan && validPlans.includes(storedPlan)) ? storedPlan : 'estandar';
 
         setSelectedPlan(plan);
@@ -86,10 +86,17 @@ export default function RegisterPage() {
             // Esperar a que la sesión esté lista
             await new Promise(resolve => setTimeout(resolve, 2000));
 
-            // 2. Crear comercio con prueba gratis
+            // 2. Crear comercio con prueba de 15 días o plan de pago
             const fechaAlta = new Date();
             const proximoPago = new Date();
-            proximoPago.setDate(proximoPago.getDate() + 15); // 15 días de prueba
+            // Siempre damos 15 días de gracia/prueba inicial, sea cual sea el plan elegido
+            proximoPago.setDate(proximoPago.getDate() + 15);
+
+            // Determinar límite según plan
+            let limite = 20; // Default Básico
+            if (selectedPlan === 'prueba') limite = 10;
+            if (selectedPlan === 'estandar') limite = 50;
+            if (selectedPlan === 'premium') limite = 100;
 
             const { data: comercio, error: comercioError } = await supabase
                 .from('comercios')
@@ -99,6 +106,7 @@ export default function RegisterPage() {
                     user_id: authData.user.id,
                     estado: 'activo', // Activar inmediatamente
                     plan: selectedPlan,
+                    limite_productos: limite,
                     fecha_alta: fechaAlta.toISOString(),
                     proximo_pago: proximoPago.toISOString().split('T')[0],
                     meses_sin_pagar: 0
@@ -119,6 +127,7 @@ export default function RegisterPage() {
     };
 
     const planNames: Record<string, string> = {
+        prueba: 'Prueba Gratis',
         basico: 'Básico',
         estandar: 'Estándar',
         premium: 'Premium'

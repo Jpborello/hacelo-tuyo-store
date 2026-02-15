@@ -7,6 +7,20 @@ import Link from 'next/link';
 
 const planes = [
     {
+        id: 'prueba',
+        nombre: 'Prueba',
+        precio: 0,
+        limite: 10,
+        descripcion: 'Para probar sin compromiso',
+        features: [
+            'Hasta 10 productos',
+            '15 días de prueba gratis',
+            'Catálogo online básico',
+            'Sin tarjeta de crédito'
+        ],
+        popular: false
+    },
+    {
         id: 'basico',
         nombre: 'Básico',
         precio: 50000,
