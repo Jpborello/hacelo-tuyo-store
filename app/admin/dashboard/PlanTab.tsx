@@ -51,8 +51,8 @@ const PLANS = [
         id: 'micro',
         name: 'Plan Micro (Test $20)',
         price: '$20/mes',
-        limit: 5,
-        features: ['Solo para probar pagos reales', 'Límite 5 productos', 'Soporte Básico'],
+        limit: 20,
+        features: ['Plan de Prueba para Devs', 'Activa Plan Básico (20 prods)', 'Pago real de bajo monto'],
         color: 'gray',
         icon: Store
     }

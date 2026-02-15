@@ -39,33 +39,25 @@ export async function POST() {
             return NextResponse.json({ status: 'no_subscription', message: 'No se encontró suscripción vinculada' });
         }
 
-        // 2️⃣ Tomar la suscripción activa más reciente que cumpla con los criterios estrictos
-        const commerceTime = new Date(comercio.creado_at).getTime();
-
-        const active = mpData.results.find((s: any) => {
-            const subTime = new Date(s.date_created).getTime();
-            // Validación estricta:
-            // 1. Status autorizado
-            // 2. ID de comercio coincide (por seguridad si la API devuelve basura)
-            // 3. Fecha de suscripción posterior a fecha de comercio (evita zombies de test)
-            return (
-                s.status === 'authorized' &&
-                s.external_reference === comercio.id &&
-                subTime >= (commerceTime - 60000) // 1 min tolerancia por reloj del servidor
-            );
-        });
+        // 2️⃣ Tomar la suscripción activa más reciente de este comercio
+        // Filtramos por status autorizado y external_reference coincidente
+        // Ordenamos por fecha de creación descendente (la más nueva primero)
+        const active = mpData.results
+            .filter((s: any) => s.status === 'authorized' && s.external_reference === comercio.id)
+            .sort((a: any, b: any) => new Date(b.date_created).getTime() - new Date(a.date_created).getTime())[0];
 
         if (!active) {
             return NextResponse.json({
                 status: 'no_active_subscription',
-                message: 'No se encontró suscripción válida y reciente para este comercio'
+                message: 'No se encontró suscripción autorizada para este comercio'
             });
         }
 
-        // 3️⃣ Resolver plan por monto (convertido a número)
+        // 3️⃣ Resolver plan por monto
         const amount = Number(active.auto_recurring?.transaction_amount);
 
         const VALID_PLANS: Record<number, { plan: string; limite: number }> = {
+            20: { plan: 'basico', limite: 20 }, // Plan de prueba mapea a Básico para tests
             50000: { plan: 'basico', limite: 20 },
             70000: { plan: 'estandar', limite: 50 },
             80000: { plan: 'premium', limite: 100 }
@@ -75,8 +67,8 @@ export async function POST() {
 
         if (!planInfo) {
             return NextResponse.json({
-                status: 'no_active_subscription',
-                message: 'Suscripción no válida o de prueba'
+                status: 'invalid_amount',
+                message: `Monto de suscripción ($${amount}) no reconocido en el sistema`
             });
         }
 
