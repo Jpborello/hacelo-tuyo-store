@@ -3,11 +3,11 @@ export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
-const PLAN_URLS = {
-    micro: 'https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=9dc55aabcb894382b10de65b5c09fdc7',
-    basico: 'https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=fe2bdde38c084335ab9e5fc87bf8b0fc',
-    estandar: 'https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=b6d7283d9dde4f08839001ca330fb676',
-    premium: 'https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=0a847dfe67ae41e9b653e54d3917eba1'
+const PLAN_IDS = {
+    micro: '9dc55aabcb894382b10de65b5c09fdc7',
+    basico: 'fe2bdde38c084335ab9e5fc87bf8b0fc',
+    estandar: 'b6d7283d9dde4f08839001ca330fb676',
+    premium: '0a847dfe67ae41e9b653e54d3917eba1'
 };
 
 export async function POST(req: Request) {
@@ -30,15 +30,53 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { planId } = body;
-    const planUrl = PLAN_URLS[planId as keyof typeof PLAN_URLS];
+    const preapprovalPlanId = PLAN_IDS[planId as keyof typeof PLAN_IDS];
 
-    if (!planUrl) {
+    if (!preapprovalPlanId) {
         return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
     }
 
-    // Agregamos external_reference para vincular el pago al comercio
-    // Y payer_email para pre-llenar (si MP lo toma)
-    const finalUrl = `${planUrl}&external_reference=${comercio.id}&payer_email=${user.email || ''}`;
+    // Determinar monto según plan
+    let amount = 50000;
+    if (planId === 'micro') amount = 20;
+    if (planId === 'estandar') amount = 70000;
+    if (planId === 'premium') amount = 80000;
 
-    return NextResponse.json({ init_point: finalUrl });
+    // Crear suscripción dinámicamente vía API
+    try {
+        const mpRes = await fetch('https://api.mercadopago.com/preapproval', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                preapproval_plan_id: preapprovalPlanId,
+                reason: `Plan ${planId.charAt(0).toUpperCase() + planId.slice(1)} - Hacelo Tuyo`,
+                external_reference: comercio.id, // VINCULACIÓN CLAVE
+                payer_email: user.email,
+                back_url: 'https://hacelotuyo.com.ar/admin/dashboard',
+                auto_recurring: {
+                    frequency: 1,
+                    frequency_type: 'months',
+                    transaction_amount: amount,
+                    currency_id: 'ARS'
+                },
+                status: 'pending'
+            })
+        });
+
+        const mpData = await mpRes.json();
+
+        if (!mpData.init_point) {
+            console.error('MP API Error:', mpData);
+            return NextResponse.json({ error: 'Error creating subscription', details: mpData }, { status: 500 });
+        }
+
+        return NextResponse.json({ init_point: mpData.init_point });
+
+    } catch (error) {
+        console.error('Fetch Error:', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
 }
