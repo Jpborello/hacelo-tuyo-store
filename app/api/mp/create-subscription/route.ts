@@ -62,6 +62,28 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
         }
 
+
+
+        step = 'determine_payer_email';
+        // Determinar si es TEST o PROD
+        const isTest = process.env.MP_ACCESS_TOKEN.startsWith('TEST-');
+        let payerEmail = '';
+
+        if (isTest) {
+            // En modo TEST, forzamos el uso de un email de prueba válido
+            // Prioridad: variable de entorno > hardcoded fallback
+            payerEmail = process.env.MP_TEST_PAYER_EMAIL || 'test_user_492421908@testuser.com';
+            console.log('TEST MODE: Using Test Payer Email:', payerEmail);
+        } else {
+            // En PROD, usamos el email del usuario real o el que mande el frontend
+            payerEmail = email || user.email;
+            console.log('PROD MODE: Using User Email:', payerEmail);
+        }
+
+        if (!payerEmail) {
+            return NextResponse.json({ error: 'payer_email is missing' }, { status: 400 });
+        }
+
         step = 'mp_create_preapproval';
         const preapproval = new PreApproval(client);
 
@@ -72,7 +94,7 @@ export async function POST(req: Request) {
             body: {
                 reason: reason,
                 external_reference: comercio.id,
-                payer_email: email || user.email || 'test_user_492421908@testuser.com',
+                payer_email: payerEmail,
                 auto_recurring: {
                     frequency: 1,
                     frequency_type: 'months',
