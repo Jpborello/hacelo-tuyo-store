@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Check, Star, Zap, Shield, MessageCircle, BarChart3, Store, Loader2, CreditCard } from 'lucide-react';
 import { Comercio } from '@/lib/types/database';
 import { useRouter } from 'next/navigation';
@@ -52,6 +52,27 @@ const PLANS = [
 export default function PlanTab({ comercio, productosCount }: PlanTabProps) {
     const router = useRouter();
     const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+    // Sincronizar suscripción al montar el componente
+    useEffect(() => {
+        const syncSubscription = async () => {
+            try {
+                // Llamada al endpoint de sincronización
+                const res = await fetch('/api/mp/sync-subscription', { method: 'POST' });
+                const data = await res.json();
+
+                if (data.status === 'updated') {
+                    console.log('Plan actualizado desde Mercado Pago, refrescando vista...');
+                    router.refresh();
+                }
+            } catch (error) {
+                console.error('Error syncing subscription:', error);
+            }
+        };
+
+        syncSubscription();
+    }, [router]);
+
     const currentPlan = PLANS.find(p => p.id === (comercio.plan || 'free')) || PLANS[0];
     const isLimitReached = productosCount >= currentPlan.limit;
     const usagePercent = currentPlan.limit === 1000
