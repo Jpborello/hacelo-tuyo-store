@@ -4,13 +4,13 @@ import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, PreApproval } from 'mercadopago';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
-// Inicializar cliente Mercado Pago
-const client = new MercadoPagoConfig({
-    accessToken: process.env.MP_ACCESS_TOKEN || ''
-});
-
 export async function POST(req: Request) {
     try {
+        // Inicializar cliente Mercado Pago dentro del handler para asegurar env vars
+        const client = new MercadoPagoConfig({
+            accessToken: process.env.MP_ACCESS_TOKEN || ''
+        });
+
         const supabase = await createServerSupabaseClient();
         const { data: { user } } = await supabase.auth.getUser();
 
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Comercio not found' }, { status: 404 });
         }
 
-        // Definir montos manualmente (Estrategia Ad-Hoc para garantizar external_reference e init_point)
+        // Definir montos manualmente (Estrategia Ad-Hoc)
         let amount = 0;
         let planName = '';
 
@@ -54,11 +54,10 @@ export async function POST(req: Request) {
         console.log(`Creating Ad-Hoc subscription for Plan: ${planId} (${amount} ARS)`);
 
         // Crear solicitud de suscripción personalizada (Ad-Hoc)
-        // Esto genera un init_point y permite external_reference sin exigir card_token_id
         const preapproval = new PreApproval(client);
 
         const subscriptionData: any = {
-            payer_email: user.email,
+            payer_email: user.email || 'no-email@hacelotuyo.com.ar', // Fallback por si acaso
             external_reference: comercio.id, // VINCULACIÓN CRÍTICA
             back_url: 'https://hacelotuyo.com.ar/admin/dashboard',
             reason: `Suscripción Plan ${planName} - Hacelo Tuyo`,
@@ -80,15 +79,16 @@ export async function POST(req: Request) {
 
     } catch (error: any) {
         console.error("========== SUBSCRIPTION ERROR ==========")
-        console.error(error)
+        console.error(JSON.stringify(error, null, 2))
 
         return NextResponse.json({
             error: 'Internal server error',
             debug: {
                 message: error.message || 'Unknown error',
-                stack: error.stack || null,
-                details: error.cause || error
+                status: error.status || 500,
+                cause: error.cause || null,
+                stack: error.stack || null
             }
-        }, { status: 500 });
+        }, { status: 500 }); // Siempre 500 al cliente, pero con info debug ahora
     }
 }
