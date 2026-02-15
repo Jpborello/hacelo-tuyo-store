@@ -1,0 +1,164 @@
+[
+  {
+    "reason": "Plan Estándar (Hacelo Tuyo)",
+    "status": "active",
+    "subscribed": 0,
+    "back_url": "https://hacelo-tuyo-store-olhw.vercel.app/admin/dashboard",
+    "auto_recurring": {
+      "frequency": 1,
+      "currency_id": "ARS",
+      "transaction_amount": 70000,
+      "frequency_type": "months"
+    },
+    "collector_id": 564942006,
+    "init_point": "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=8c1ecdf1dd714e499fd44f931ffb6c07",
+    "date_created": "2026-02-14T21:20:38.194-04:00",
+    "id": "8c1ecdf1dd714e499fd44f931ffb6c07",
+    "last_modified": "2026-02-14T21:20:38.194-04:00",
+    "application_id": 1673751278043716
+  },
+  {
+    "reason": "Plan Básico (Hacelo Tuyo)",
+    "status": "active",
+    "subscribed": 0,
+    "back_url": "https://hacelo-tuyo-store-olhw.vercel.app/admin/dashboard",
+    "auto_recurring": {
+      "frequency": 1,
+      "currency_id": "ARS",
+      "transaction_amount": 50000,
+      "frequency_type": "months"
+    },
+    "collector_id": 564942006,
+    "init_point": "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=2c7df34fc28b4d0eac347bd827f75f49",
+    "date_created": "2026-02-14T21:20:37.829-04:00",
+    "id": "2c7df34fc28b4d0eac347bd827f75f49",
+    "last_modified": "2026-02-14T21:20:37.829-04:00",
+    "application_id": 1673751278043716
+  },
+  {
+    "reason": "Plan Premium (Hacelo Tuyo)",
+    "status": "active",
+    "subscribed": 0,
+    "back_url": "https://hacelo-tuyo-store-olhw.vercel.app/admin/dashboard",
+    "auto_recurring": {
+      "frequency": 1,
+      "currency_id": "ARS",
+      "transaction_amount": 80000,
+      "frequency_type": "months"
+    },
+    "collector_id": 564942006,
+    "init_point": "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=9524ab93d7964c57b1a9aaf753aeee88",
+    "date_created": "2026-02-14T21:20:38.565-04:00",
+    "id": "9524ab93d7964c57b1a9aaf753aeee88",
+    "last_modified": "2026-02-14T21:20:38.565-04:00",
+    "application_id": 1673751278043716
+  },
+  {
+    "reason": "Plan Básico (Hacelo Tuyo)",
+    "status": "active",
+    "subscribed": 0,
+    "back_url": "https://hacelo-tuyo-store-olhw.vercel.app/admin/dashboard",
+    "auto_recurring": {
+      "frequency": 1,
+      "currency_id": "ARS",
+      "transaction_amount": 50000,
+      "frequency_type": "months"
+    },
+    "collector_id": 564942006,
+    "init_point": "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=e3534a1fea404c8dae823eb28e1a8985",
+    "date_created": "2026-02-14T21:20:55.670-04:00",
+    "id": "e3534a1fea404c8dae823eb28e1a8985",
+    "last_modified": "2026-02-14T21:20:55.670-04:00",
+    "application_id": 1673751278043716
+  },
+  {
+    "reason": "Plan Estándar (Hacelo Tuyo)",
+    "status": "active",
+    "subscribed": 0,
+    "back_url": "https://hacelo-tuyo-store-olhw.vercel.app/admin/dashboard",
+    "auto_recurring": {
+      "frequency": 1,
+      "currency_id": "ARS",
+      "transaction_amount": 70000,
+      "frequency_type": "months"
+    },
+    "collector_id": 564942006,
+    "init_point": "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=ff0084325d7449838aa5add0b2eda346",
+    "date_created": "2026-02-14T21:20:56.015-04:00",
+    "id": "ff0084325d7449838aa5add0b2eda346",
+    "last_modified": "2026-02-14T21:20:56.015-04:00",
+    "application_id": 1673751278043716
+  },
+  {
+    "reason": "Plan Premium (Hacelo Tuyo)",
+    "status": "active",
+    "subscribed": 0,
+    "back_url": "https://hacelo-tuyo-store-olhw.vercel.app/admin/dashboard",
+    "auto_recurring": {
+      "frequency": 1,
+      "currency_id": "ARS",
+      "transaction_amount": 80000,
+      "frequency_type": "months"
+    },
+    "collector_id": 564942006,
+    "init_point": "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=e9c6f3f6bae64960beeba84511d87755",
+    "date_created": "2026-02-14T21:20:56.356-04:00",
+    "id": "e9c6f3f6bae64960beeba84511d87755",
+    "last_modified": "2026-02-14T21:20:56.356-04:00",
+    "application_id": 1673751278043716
+  },
+  {
+    "reason": "Plan Estándar (Hacelo Tuyo)",
+    "status": "active",
+    "subscribed": 0,
+    "back_url": "https://hacelo-tuyo-store-olhw.vercel.app/admin/dashboard",
+    "auto_recurring": {
+      "frequency": 1,
+      "currency_id": "ARS",
+      "transaction_amount": 70000,
+      "frequency_type": "months"
+    },
+    "collector_id": 564942006,
+    "init_point": "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=b6d7283d9dde4f08839001ca330fb676",
+    "date_created": "2026-02-14T21:21:00.775-04:00",
+    "id": "b6d7283d9dde4f08839001ca330fb676",
+    "last_modified": "2026-02-14T21:21:00.775-04:00",
+    "application_id": 1673751278043716
+  },
+  {
+    "reason": "Plan Básico (Hacelo Tuyo)",
+    "status": "active",
+    "subscribed": 0,
+    "back_url": "https://hacelo-tuyo-store-olhw.vercel.app/admin/dashboard",
+    "auto_recurring": {
+      "frequency": 1,
+      "currency_id": "ARS",
+      "transaction_amount": 50000,
+      "frequency_type": "months"
+    },
+    "collector_id": 564942006,
+    "init_point": "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=fe2bdde38c084335ab9e5fc87bf8b0fc",
+    "date_created": "2026-02-14T21:21:00.446-04:00",
+    "id": "fe2bdde38c084335ab9e5fc87bf8b0fc",
+    "last_modified": "2026-02-14T21:21:00.446-04:00",
+    "application_id": 1673751278043716
+  },
+  {
+    "reason": "Plan Premium (Hacelo Tuyo)",
+    "status": "active",
+    "subscribed": 0,
+    "back_url": "https://hacelo-tuyo-store-olhw.vercel.app/admin/dashboard",
+    "auto_recurring": {
+      "frequency": 1,
+      "currency_id": "ARS",
+      "transaction_amount": 80000,
+      "frequency_type": "months"
+    },
+    "collector_id": 564942006,
+    "init_point": "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=0a847dfe67ae41e9b653e54d3917eba1",
+    "date_created": "2026-02-14T21:21:01.122-04:00",
+    "id": "0a847dfe67ae41e9b653e54d3917eba1",
+    "last_modified": "2026-02-14T21:21:01.122-04:00",
+    "application_id": 1673751278043716
+  }
+]
