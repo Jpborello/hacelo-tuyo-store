@@ -6,7 +6,6 @@ import { MercadoPagoConfig, Preference } from 'mercadopago';
 
 // Precios de Planes (Mensual)
 const PLANS_INFO = {
-    micro: { price: 20, title: 'Plan Micro (Test)' },
     basico: { price: 50000, title: 'Plan Básico' },
     estandar: { price: 70000, title: 'Plan Estándar' },
     premium: { price: 80000, title: 'Plan Premium' }

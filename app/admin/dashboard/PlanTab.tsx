@@ -11,15 +11,6 @@ interface PlanTabProps {
 
 const PLANS = [
     {
-        id: 'prueba',
-        name: 'Prueba Gratis',
-        price: 'Gratis',
-        limit: 10,
-        features: ['Hasta 10 productos', '15 días de prueba', 'Sin tarjeta de crédito'],
-        color: 'green',
-        icon: Store
-    },
-    {
         id: 'basico',
         name: 'Básico',
         price: '$50.000/mes',
@@ -46,15 +37,6 @@ const PLANS = [
         features: ['Hasta 100 productos', 'Catálogo online personalizado', 'Gestión de pedidos', 'WhatsApp integrado', 'Soporte 24/7', 'Estadísticas avanzadas', 'Reportes personalizados'],
         color: 'orange',
         icon: Shield
-    },
-    {
-        id: 'micro',
-        name: 'Plan Micro (Test $20)',
-        price: '$20/mes',
-        limit: 20,
-        features: ['Plan de Prueba para Devs', 'Activa Plan Básico (20 prods)', 'Pago real de bajo monto'],
-        color: 'gray',
-        icon: Store
     }
 ];
 

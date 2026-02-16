@@ -70,7 +70,6 @@ export async function POST() {
         const amount = lastPayment.transaction_amount!;
 
         const VALID_PLANS: Record<number, { plan: string; limite: number }> = {
-            20: { plan: 'basico', limite: 20 }, // Test
             50000: { plan: 'basico', limite: 20 },
             70000: { plan: 'estandar', limite: 50 },
             80000: { plan: 'premium', limite: 100 }
