@@ -92,7 +92,7 @@ export default function PlanTab({ comercio, productosCount }: PlanTabProps) {
         try {
             setLoadingPlan(planId);
 
-            const response = await fetch('/api/rebill/create-checkout', {
+            const response = await fetch('/api/mp/create-subscription', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -105,7 +105,7 @@ export default function PlanTab({ comercio, productosCount }: PlanTabProps) {
             const data = await response.json();
 
             if (data.init_point) {
-                // Redirigir a Rebill
+                // Redirigir a Mercado Pago
                 window.location.href = data.init_point;
             } else {
                 console.error('Subscription Error:', data);
