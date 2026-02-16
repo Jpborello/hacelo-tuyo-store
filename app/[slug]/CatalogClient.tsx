@@ -67,16 +67,16 @@ export default function CatalogClient({ comercio, productos, categorias }: Catal
             <header className="bg-white shadow-md sticky top-0 z-40">
                 <div className="container mx-auto px-4 py-4">
                     <div className="flex items-center justify-between mb-4">
-                        <div>
-                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                        <div className="flex-1 min-w-0 pr-4">
+                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">
                                 {comercio.nombre}
                             </h1>
-                            <p className="text-sm text-gray-500">Catálogo de Productos</p>
+                            <p className="text-sm text-gray-500 truncate">Catálogo de Productos</p>
                         </div>
 
                         <button
                             onClick={() => setShowCart(true)}
-                            className="relative bg-blue-600 hover:bg-blue-700 text-white p-3 md:p-4 rounded-full shadow-lg transition"
+                            className="relative bg-blue-600 hover:bg-blue-700 text-white p-3 md:p-4 rounded-full shadow-lg transition flex-shrink-0"
                         >
                             <ShoppingCart className="w-6 h-6" />
                             {getItemCount() > 0 && (

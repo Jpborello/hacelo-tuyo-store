@@ -24,9 +24,9 @@ export default function RegisterPage() {
         // Obtener plan seleccionado del localStorage
         const storedPlan = localStorage.getItem('selectedPlan');
 
-        // Validar que sea un plan permitido (evitar 'micro' u otros valores de test/legacy)
+        // Validar que sea un plan permitido
         const validPlans = ['prueba', 'basico', 'estandar', 'premium'];
-        const plan = (storedPlan && validPlans.includes(storedPlan)) ? storedPlan : 'estandar';
+        const plan = (storedPlan && validPlans.includes(storedPlan)) ? storedPlan : 'prueba';
 
         setSelectedPlan(plan);
     }, []);
@@ -86,15 +86,26 @@ export default function RegisterPage() {
             // Esperar a que la sesión esté lista
             await new Promise(resolve => setTimeout(resolve, 2000));
 
-            // 2. Crear comercio con prueba de 15 días o plan de pago
+            // 2. Crear comercio
             const fechaAlta = new Date();
             const proximoPago = new Date();
-            // Siempre damos 15 días de gracia/prueba inicial, sea cual sea el plan elegido
-            proximoPago.setDate(proximoPago.getDate() + 15);
 
-            // Determinar límite según plan
-            let limite = 20; // Default Básico
-            if (selectedPlan === 'prueba') limite = 10;
+            // Lógica según plan
+            const esPrueba = selectedPlan === 'prueba';
+
+            if (esPrueba) {
+                // Plan Prueba: 15 días gratis
+                proximoPago.setDate(proximoPago.getDate() + 15);
+            } else {
+                // Plan Pago: Pago inmediato requerido
+                // No sumamos días, vence hoy/ahora si no paga
+            }
+
+            // Determinar límite
+            let limite = 0; // Por defecto 0 si está pendiente
+            if (esPrueba) limite = 10;
+            // Si es pago, el límite se activará cuando pague (o podemos guardarlo ya pero el estado 'pendiente' bloqueará)
+            if (selectedPlan === 'basico') limite = 20;
             if (selectedPlan === 'estandar') limite = 50;
             if (selectedPlan === 'premium') limite = 100;
 
@@ -104,7 +115,7 @@ export default function RegisterPage() {
                     nombre: formData.nombreComercio,
                     slug: formData.slug,
                     user_id: authData.user.id,
-                    estado: 'activo', // Activar inmediatamente
+                    estado: esPrueba ? 'activo' : 'pendiente', // Solo activo si es prueba
                     plan: selectedPlan,
                     limite_productos: limite,
                     fecha_alta: fechaAlta.toISOString(),
@@ -261,8 +272,10 @@ export default function RegisterPage() {
                                     <Loader2 className="w-5 h-5 animate-spin" />
                                     Creando cuenta...
                                 </>
-                            ) : (
+                            ) : selectedPlan === 'prueba' ? (
                                 'Empezar Prueba Gratis (15 días)'
+                            ) : (
+                                'Crear Cuenta'
                             )}
                         </button>
                     </form>
@@ -277,14 +290,25 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Info */}
-                <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-800">
-                    <p className="font-semibold mb-1">✨ Prueba Gratis por 15 Días</p>
-                    <ul className="list-disc list-inside space-y-1">
-                        <li>Sin tarjeta de crédito</li>
-                        <li>Acceso completo a todas las funciones</li>
-                        <li>Cancelá cuando quieras</li>
-                    </ul>
-                </div>
+                {selectedPlan === 'prueba' && (
+                    <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-800">
+                        <p className="font-semibold mb-1">✨ Prueba Gratis por 15 Días</p>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Sin tarjeta de crédito</li>
+                            <li>Acceso completo a todas las funciones</li>
+                            <li>Cancelá cuando quieras</li>
+                        </ul>
+                    </div>
+                )}
+
+                {selectedPlan !== 'prueba' && (
+                    <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+                        <p className="font-semibold mb-1">🚀 Estás a un paso</p>
+                        <p>
+                            Al crear tu cuenta serás redirigido para completar el pago de tu suscripción {planNames[selectedPlan] || 'seleccionada'}.
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
     );

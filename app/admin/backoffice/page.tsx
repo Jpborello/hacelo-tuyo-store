@@ -11,8 +11,10 @@ export default async function BackofficePage() {
         redirect('/login');
     }
 
-    // TODO: Agregar chequeo de admin real (por email o rol)
-    // Por ahora, solo restringimos el acceso visualmente o por URL
+    // Seguridad: Solo permitir el email del administrador
+    if (user.email !== process.env.ADMIN_EMAIL) {
+        redirect('/admin/dashboard');
+    }
 
     return <BackofficeClient />;
 }

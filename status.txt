@@ -1,0 +1,35 @@
+--- Checking Commerce ---
+All Comercios in DB: [
+  {
+    "id": "e6fd214c-c5bd-4768-bfb3-880ec4b2dd13",
+    "nombre": "Nuevo Rumbo",
+    "slug": "nuevo-rumbo"
+  }
+]
+Commerce: {
+  "id": "e6fd214c-c5bd-4768-bfb3-880ec4b2dd13",
+  "creado_at": "2026-02-16T18:35:14.989078+00:00",
+  "nombre": "Nuevo Rumbo",
+  "slug": "nuevo-rumbo",
+  "logo_url": null,
+  "user_id": "aae5a382-f918-4291-ad1e-ca3cabd13908",
+  "estado": "activo",
+  "plan": "premium",
+  "limite_productos": 100,
+  "fecha_alta": "2026-02-16T18:35:14.921",
+  "fecha_ultimo_pago": null,
+  "proximo_pago": "2026-03-03",
+  "meses_sin_pagar": 0,
+  "mp_subscription_id": null,
+  "mp_preapproval_id": null,
+  "tiene_metodo_pago": false,
+  "notas_admin": null,
+  "mp_payer_id": null,
+  "mp_status": "trial",
+  "mp_external_reference": null,
+  "mp_next_payment_date": null
+}
+
+--- Checking Products ---
+Total Products in DB: 28
+Sample Products: null

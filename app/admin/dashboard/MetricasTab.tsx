@@ -127,7 +127,7 @@ export default function MetricasTab({ comercioId }: MetricasTabProps) {
                         <Package className="w-5 h-5 text-gray-500" />
                         Top 5 Productos
                     </h3>
-                    <div className="h-[300px]">
+                    <div style={{ width: '100%', height: 300 }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={metrics.topProductos} layout="vertical">
                                 <CartesianGrid strokeDasharray="3 3" />
@@ -148,7 +148,7 @@ export default function MetricasTab({ comercioId }: MetricasTabProps) {
                         <TrendingUp className="w-5 h-5 text-gray-500" />
                         Ventas Diarias
                     </h3>
-                    <div className="h-[300px]">
+                    <div style={{ width: '100%', height: 300 }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={metrics.ventasPorDia}>
                                 <CartesianGrid strokeDasharray="3 3" />

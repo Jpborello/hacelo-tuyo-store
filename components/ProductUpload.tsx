@@ -156,12 +156,13 @@ export default function ProductUpload({ comercioSlug, onProductCreated }: Produc
 
             // Plan limits
             const limits: Record<string, number> = {
+                prueba: 10,
                 basico: 20,
                 estandar: 50,
                 premium: 100
             };
 
-            const currentPlan = comercio.plan || 'basico';
+            const currentPlan = comercio.plan || 'prueba';
             const limit = limits[currentPlan];
 
             if (count !== null && count >= limit) {

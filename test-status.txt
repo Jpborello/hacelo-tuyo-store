@@ -1,0 +1,33 @@
+--- TEST INSERT START ---
+Categories: [
+  {
+    "id": "30324de4-2972-4ab0-9912-39bc443b8995",
+    "comercio_id": "e6fd214c-c5bd-4768-bfb3-880ec4b2dd13",
+    "nombre": "Almacén",
+    "slug": "almacen",
+    "orden": 1,
+    "creado_at": "2026-02-16T18:54:45.595778+00:00"
+  },
+  {
+    "id": "a6651134-dd75-4c68-8f50-bb3970a83825",
+    "comercio_id": "e6fd214c-c5bd-4768-bfb3-880ec4b2dd13",
+    "nombre": "Kiosco",
+    "slug": "kiosco",
+    "orden": 1,
+    "creado_at": "2026-02-16T18:54:46.025768+00:00"
+  }
+]
+Using Category ID: 30324de4-2972-4ab0-9912-39bc443b8995
+INSERT SUCCESS: {
+  "id": "7cd51661-dae0-42f9-b6ba-76b1106649a1",
+  "comercio_id": "e6fd214c-c5bd-4768-bfb3-880ec4b2dd13",
+  "nombre": "Producto de Prueba Script",
+  "descripcion": null,
+  "precio": 1234,
+  "stock": 10,
+  "imagen_url": null,
+  "unidad_medida": "bulto",
+  "creado_at": "2026-02-16T19:06:45.348894+00:00",
+  "actualizado_at": "2026-02-16T19:06:45.348894+00:00",
+  "categoria_id": "30324de4-2972-4ab0-9912-39bc443b8995"
+}

@@ -1,12 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { Comercio } from '@/lib/types/database';
-import { Loader2, Shield, Save, Search, RefreshCw } from 'lucide-react';
+import { Loader2, Shield, Search, RefreshCw, AlertTriangle, CheckCircle, XCircle, Ban } from 'lucide-react';
+import { getAllComercios, updateComercioPlan, updateComercioStatus } from './actions';
 
 export default function BackofficeClient() {
-    const supabase = createClient();
     const [comercios, setComercios] = useState<Comercio[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -14,13 +13,12 @@ export default function BackofficeClient() {
 
     const loadComercios = async () => {
         setLoading(true);
-        const { data, error } = await supabase
-            .from('comercios')
-            .select('*')
-            .order('creado_at', { ascending: false });
-
-        if (!error && data) {
-            setComercios(data);
+        try {
+            const data = await getAllComercios();
+            setComercios(data as Comercio[]);
+        } catch (error) {
+            console.error(error);
+            // alert('Error cargando comercios: ' + error); 
         }
         setLoading(false);
     };
@@ -30,38 +28,44 @@ export default function BackofficeClient() {
     }, []);
 
     const handleUpdatePlan = async (comercioId: string, newPlan: string) => {
+        // Confirmar cambio si es downgrade
+        if (!confirm('¿Estás seguro de cambiar el plan? Esto actualizará el límite de productos.')) return;
+
         setUpdating(comercioId);
 
-        let limite = 15; // Free
-        let planToSave: any = newPlan;
+        let limite = 10; // Default Prueba
 
-        if (newPlan === 'free') {
-            planToSave = null;
-            limite = 15;
-        } else if (newPlan === 'basico') {
-            limite = 50;
-        } else if (newPlan === 'premium') {
-            limite = 1000; // Ilimitado visualmente
+        switch (newPlan) {
+            case 'prueba': limite = 10; break;
+            case 'basico': limite = 20; break;
+            case 'estandar': limite = 50; break;
+            case 'premium': limite = 100; break;
         }
 
-        const { error } = await supabase
-            .from('comercios')
-            .update({
-                plan: planToSave,
-                limite_productos: limite
-            })
-            .eq('id', comercioId);
-
-        if (error) {
-            alert('Error al actualizar plan: ' + error.message);
-            console.error(error);
-        } else {
+        try {
+            await updateComercioPlan(comercioId, newPlan, limite);
             // Actualizar localmente
             setComercios(comercios.map(c =>
                 c.id === comercioId
-                    ? { ...c, plan: planToSave, limite_productos: limite }
+                    ? { ...c, plan: newPlan as any, limite_productos: limite }
                     : c
             ));
+        } catch (error: any) {
+            alert('Error al actualizar plan: ' + error.message);
+        }
+        setUpdating(null);
+    };
+
+    const handleUpdateStatus = async (comercioId: string, newStatus: string) => {
+        setUpdating(comercioId);
+
+        try {
+            await updateComercioStatus(comercioId, newStatus);
+            setComercios(comercios.map(c =>
+                c.id === comercioId ? { ...c, estado: newStatus as any } : c
+            ));
+        } catch (error: any) {
+            alert('Error al actualizar estado: ' + error.message);
         }
         setUpdating(null);
     };
@@ -70,6 +74,58 @@ export default function BackofficeClient() {
         c.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.slug.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const getExpirationStatus = (comercio: Comercio) => {
+        let expirationDate: Date | null = null;
+
+        if (comercio.plan === 'prueba') {
+            const createdAt = new Date(comercio.creado_at);
+            expirationDate = new Date(createdAt);
+            expirationDate.setDate(createdAt.getDate() + 15);
+        } else if (comercio.mp_next_payment_date) {
+            expirationDate = new Date(comercio.mp_next_payment_date);
+        } else if (comercio.fecha_ultimo_pago) {
+            const lastPayment = new Date(comercio.fecha_ultimo_pago);
+            expirationDate = new Date(lastPayment);
+            expirationDate.setDate(lastPayment.getDate() + 30);
+        }
+
+        if (!expirationDate) return null;
+
+        const now = new Date();
+        const diffTime = expirationDate.getTime() - now.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays <= 5 && diffDays >= 0) {
+            return (
+                <span className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-orange-100 text-orange-800 border border-orange-200">
+                    <AlertTriangle className="w-3 h-3" />
+                    Vence en {diffDays} día{diffDays !== 1 ? 's' : ''}
+                </span>
+            );
+        }
+
+        if (diffDays < 0 && comercio.estado !== 'suspendido' && comercio.estado !== 'bloqueado') {
+            return (
+                <span className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-800 border border-red-200">
+                    <AlertTriangle className="w-3 h-3" />
+                    Vencido hace {Math.abs(diffDays)} días
+                </span>
+            );
+        }
+
+        return null;
+    };
+
+    const getStatusBadge = (status: string | undefined) => {
+        switch (status) {
+            case 'activo': return <span className="px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> ACTIVO</span>;
+            case 'pendiente': return <span className="px-2 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> PENDIENTE</span>;
+            case 'suspendido': return <span className="px-2 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800 flex items-center gap-1"><XCircle className="w-3 h-3" /> SUSPENDIDO</span>;
+            case 'bloqueado': return <span className="px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 flex items-center gap-1"><Ban className="w-3 h-3" /> BLOQUEADO</span>;
+            default: return <span className="px-2 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-800">UNK</span>;
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gray-100 p-8">
@@ -81,7 +137,7 @@ export default function BackofficeClient() {
                         </div>
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900">Panel de Control (Super Admin)</h1>
-                            <p className="text-gray-500">Gestioná los planes de todos los comercios desde acá.</p>
+                            <p className="text-gray-500">Administrá usuarios, planes y estados.</p>
                         </div>
                     </div>
                     <button
@@ -106,14 +162,14 @@ export default function BackofficeClient() {
                 </div>
 
                 {/* Tabla */}
-                <div className="bg-white rounded-xl shadow-lg run-in overflow-hidden">
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
                                     <th className="px-6 py-4 font-semibold text-gray-600">Comercio</th>
-                                    <th className="px-6 py-4 font-semibold text-gray-600">Slug</th>
-                                    <th className="px-6 py-4 font-semibold text-gray-600">Plan Actual</th>
+                                    <th className="px-6 py-4 font-semibold text-gray-600">Plan</th>
+                                    <th className="px-6 py-4 font-semibold text-gray-600">Estado</th>
                                     <th className="px-6 py-4 font-semibold text-gray-600">Acciones</th>
                                 </tr>
                             </thead>
@@ -138,39 +194,72 @@ export default function BackofficeClient() {
                                         <tr key={comercio.id} className="hover:bg-gray-50 transition">
                                             <td className="px-6 py-4">
                                                 <div className="font-semibold text-gray-900">{comercio.nombre}</div>
-                                                <div className="text-xs text-gray-400">{new Date(comercio.creado_at).toLocaleDateString()}</div>
-                                            </td>
-                                            <td className="px-6 py-4">
                                                 <a
                                                     href={`/${comercio.slug}`}
                                                     target="_blank"
-                                                    className="text-indigo-600 hover:underline flex items-center gap-1"
+                                                    className="text-xs text-indigo-600 hover:underline flex items-center gap-1"
                                                 >
-                                                    {comercio.slug}
+                                                    /{comercio.slug}
                                                 </a>
+                                                <div className="text-xs text-gray-400 mt-1">
+                                                    Alta: {new Date(comercio.creado_at).toLocaleDateString()}
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${comercio.plan === 'premium' ? 'bg-purple-100 text-purple-700' :
-                                                    comercio.plan === 'basico' ? 'bg-blue-100 text-blue-700' :
-                                                        'bg-gray-100 text-gray-700'
-                                                    }`}>
-                                                    {comercio.plan || 'Gratis'}
-                                                </span>
+                                                <select
+                                                    className="px-2 py-1 bg-white border border-gray-200 rounded text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-full max-w-[140px]"
+                                                    value={comercio.plan || 'prueba'}
+                                                    onChange={(e) => handleUpdatePlan(comercio.id, e.target.value)}
+                                                    disabled={updating === comercio.id}
+                                                >
+                                                    <option value="prueba">Prueba (10)</option>
+                                                    <option value="basico">Básico (20)</option>
+                                                    <option value="estandar">Estándar (50)</option>
+                                                    <option value="premium">Premium (100)</option>
+                                                </select>
+                                                <div className="text-xs text-gray-500 mt-1">
+                                                    Límite: {comercio.limite_productos} productos
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="mb-2 flex flex-col items-start gap-1">
+                                                    {getStatusBadge(comercio.estado)}
+                                                    {getExpirationStatus(comercio)}
+                                                </div>
+                                                <select
+                                                    className="px-2 py-1 bg-white border border-gray-200 rounded text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-full max-w-[140px]"
+                                                    value={comercio.estado || 'pendiente'}
+                                                    onChange={(e) => handleUpdateStatus(comercio.id, e.target.value)}
+                                                    disabled={updating === comercio.id}
+                                                >
+                                                    <option value="activo">Activo</option>
+                                                    <option value="pendiente">Pendiente</option>
+                                                    <option value="suspendido">Suspendido</option>
+                                                    <option value="bloqueado">Bloqueado</option>
+                                                </select>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-2">
-                                                    <select
-                                                        className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                        value={comercio.plan || 'free'}
-                                                        onChange={(e) => handleUpdatePlan(comercio.id, e.target.value)}
-                                                        disabled={updating === comercio.id}
-                                                    >
-                                                        <option value="free">Gratis</option>
-                                                        <option value="basico">Emprendedor</option>
-                                                        <option value="premium">Empresario</option>
-                                                    </select>
                                                     {updating === comercio.id && (
-                                                        <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+                                                        <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+                                                    )}
+                                                    {/* Botón rápido de bloqueo/desbloqueo */}
+                                                    {comercio.estado === 'bloqueado' ? (
+                                                        <button
+                                                            onClick={() => handleUpdateStatus(comercio.id, 'activo')}
+                                                            disabled={updating === comercio.id}
+                                                            className="text-xs font-semibold text-green-600 bg-green-50 px-3 py-1 rounded-md hover:bg-green-100 transition"
+                                                        >
+                                                            Desbloquear
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleUpdateStatus(comercio.id, 'bloqueado')}
+                                                            disabled={updating === comercio.id}
+                                                            className="text-xs font-semibold text-red-600 bg-red-50 px-3 py-1 rounded-md hover:bg-red-100 transition"
+                                                        >
+                                                            Bloquear
+                                                        </button>
                                                     )}
                                                 </div>
                                             </td>

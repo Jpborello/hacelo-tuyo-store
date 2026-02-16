@@ -41,7 +41,11 @@ export default function LoginPage() {
 
                 if (error) throw error;
 
-                router.push('/admin/dashboard');
+                if (email === 'jpborello25@gmail.com') {
+                    router.push('/admin/backoffice');
+                } else {
+                    router.push('/admin/dashboard');
+                }
                 router.refresh();
             }
         } catch (err: any) {

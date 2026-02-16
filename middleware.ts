@@ -38,6 +38,13 @@ export async function middleware(req: NextRequest) {
             return NextResponse.redirect(new URL('/login', req.url))
         }
 
+        const isAdmin = session.user.email === process.env.ADMIN_EMAIL;
+
+        // Admin Bypass: Permitir acceso al backoffice sin comercio
+        if (isAdmin && req.nextUrl.pathname.startsWith('/admin/backoffice')) {
+            return supabaseResponse;
+        }
+
         // Check account status
         const { data: comercio } = await supabase
             .from('comercios')

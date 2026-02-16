@@ -13,7 +13,7 @@ export interface Comercio {
     logo_url: string | null;
     user_id: string;
     // Campos de suscripción
-    estado?: 'pendiente' | 'activo' | 'bloqueado' | 'eliminado';
+    estado?: 'pendiente' | 'activo' | 'bloqueado' | 'eliminado' | 'suspendido';
     plan?: 'prueba' | 'basico' | 'estandar' | 'premium';
     limite_productos: number;
     // Mercado Pago Fields
