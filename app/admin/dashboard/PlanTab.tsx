@@ -125,6 +125,50 @@ export default function PlanTab({ comercio, productosCount }: PlanTabProps) {
                 </div>
             </div>
 
+            {/* Banner de Suspensión */}
+            {(comercio.mp_status === 'suspended' || comercio.mp_status === 'to_delete') && (
+                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+                    <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                            <Shield className="h-5 w-5 text-red-500" />
+                        </div>
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-red-800">
+                                Cuenta Suspendida
+                            </h3>
+                            <div className="mt-2 text-sm text-red-700">
+                                <p>
+                                    Tu período de servicio ha finalizado. Tu tienda ha sido desactivada temporalmente.
+                                    Para reactivar tu sitio y volver a vender, por favor renová tu suscripción eligiendo un plan abajo.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Banner de Gracia */}
+            {comercio.mp_status === 'grace_period' && (
+                <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg">
+                    <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                            <Zap className="h-5 w-5 text-orange-500" />
+                        </div>
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-orange-800">
+                                Renovación Pendiente
+                            </h3>
+                            <div className="mt-2 text-sm text-orange-700">
+                                <p>
+                                    Tu plan ha vencido recientemente. Tienes 5 días de gracia antes de que se suspenda el servicio.
+                                    Por favor, realizá el pago para evitar interrupciones.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Estado Actual */}
             <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-indigo-500">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -138,9 +182,14 @@ export default function PlanTab({ comercio, productosCount }: PlanTabProps) {
                             </span>
                         ) : comercio.mp_status && (
                             <span className={`text-xs px-2 py-1 rounded-full uppercase ml-2 ${comercio.mp_status === 'active' || comercio.mp_status === 'authorized' ? 'bg-green-100 text-green-700' :
-                                comercio.mp_status === 'paused' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                                comercio.mp_status === 'grace_period' ? 'bg-orange-100 text-orange-700' :
+                                    comercio.mp_status === 'suspended' ? 'bg-red-100 text-red-700 font-bold' :
+                                        comercio.mp_status === 'paused' ? 'bg-yellow-100 text-yellow-700' :
+                                            'bg-gray-100 text-gray-700'
                                 }`}>
-                                {comercio.mp_status}
+                                {comercio.mp_status === 'grace_period' ? 'Renovación Pendiente' :
+                                    comercio.mp_status === 'suspended' ? 'SUSPENDIDA' :
+                                        comercio.mp_status}
                             </span>
                         )}
                         <p className="text-sm text-gray-500 mt-1">

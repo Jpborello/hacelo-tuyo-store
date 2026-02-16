@@ -19,7 +19,7 @@ export interface Comercio {
     // Mercado Pago Fields
     mp_subscription_id?: string | null;
     mp_payer_id?: string;
-    mp_status?: 'active' | 'paused' | 'cancelled' | 'pending' | 'authorized';
+    mp_status?: 'active' | 'pending' | 'paused' | 'cancelled' | 'authorized' | 'grace_period' | 'suspended' | 'to_delete' | 'trial' | 'expired';
     mp_external_reference?: string;
     fecha_alta?: string | null;
     fecha_ultimo_pago?: string | null;

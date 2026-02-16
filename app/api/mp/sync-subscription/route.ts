@@ -16,7 +16,7 @@ export async function POST() {
         // 0️⃣ Obtener comercio
         const { data: comercio } = await supabase
             .from('comercios')
-            .select('id, creado_at')
+            .select('id, creado_at, plan, limite_productos')
             .eq('user_id', user.id)
             .single();
 
@@ -32,82 +32,81 @@ export async function POST() {
             options: {
                 external_reference: comercio.id,
                 status: 'approved',
-                limit: 10,
+                limit: 1, // Solo necesitamos el último
                 sort: 'date_created',
                 criteria: 'desc'
             }
         });
 
         const payments = searchResult.results || [];
-
-        if (payments.length === 0) {
-            return NextResponse.json({ status: 'no_payment', message: 'No se encontraron pagos aprobados' });
-        }
-
-        // 2️⃣ Tomar el pago aprobado más reciente
-        // (Ya viene ordenado por date_created desc, pero aseguramos)
         const lastPayment = payments[0];
-        const paymentDate = new Date(lastPayment.date_created!);
         const now = new Date();
 
-        // Calcular diferencia de días
-        const diffTime = Math.abs(now.getTime() - paymentDate.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        let mp_status = 'authorized';
+        let plan = comercio.plan;
+        let limite = comercio.limite_productos;
+        let mp_next_payment_date: string | null = null;
+        let diffDays = 0;
 
-        // 3️⃣ Verificar si está vigente (30 días + 2 de gracia = 32)
-        if (diffDays > 32) {
-            console.log(`Último pago vencido: ${diffDays} días atrás. Downgrading...`);
+        if (lastPayment) { // 🟢 USUARIO CON PAGOS PREVIOS
+            const paymentDate = new Date(lastPayment.date_created!);
+            const diffTime = Math.abs(now.getTime() - paymentDate.getTime());
+            diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            // ACTUALIZAR A PLAN GRATUITO (Downgrade)
-            await supabase
-                .from('comercios')
-                .update({
-                    plan: 'prueba',
-                    limite_productos: 10,
-                    mp_status: 'expired',
-                    mp_next_payment_date: null
-                })
-                .eq('id', comercio.id);
+            // Calcular fecha renovación (Fecha pago + 30 días)
+            const renewalDate = new Date(paymentDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+            mp_next_payment_date = renewalDate.toISOString();
 
-            return NextResponse.json({
-                status: 'expired',
-                message: `Pago vencido hace ${diffDays} días. Plan degradado a Prueba.`,
-                last_payment_date: lastPayment.date_created
-            });
+            if (diffDays <= 30) {
+                mp_status = 'authorized'; // Al día
+            } else if (diffDays <= 35) {
+                mp_status = 'grace_period'; // 5 días de gracia (30-35)
+            } else if (diffDays > 90) {
+                mp_status = 'to_delete'; // 3 meses sin pagar
+                plan = 'prueba'; // Downgrade visual
+            } else {
+                mp_status = 'suspended'; // Bloqueado (>35 días)
+                plan = 'prueba'; // Downgrade visual
+            }
+
+            // Resolver plan si está activo o en gracia
+            if (mp_status === 'authorized' || mp_status === 'grace_period') {
+                const amount = lastPayment.transaction_amount!;
+                const VALID_PLANS: Record<number, { plan: string; limite: number }> = {
+                    50000: { plan: 'basico', limite: 20 },
+                    70000: { plan: 'estandar', limite: 50 },
+                    80000: { plan: 'premium', limite: 100 }
+                };
+                if (VALID_PLANS[amount]) {
+                    plan = VALID_PLANS[amount].plan;
+                    limite = VALID_PLANS[amount].limite;
+                }
+            }
+
+        } else { // 🟡 USUARIO DE PRUEBA (Sin pagos)
+            const created = new Date(comercio.creado_at);
+            const diffTime = Math.abs(now.getTime() - created.getTime());
+            const trialDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (trialDays > 15) {
+                mp_status = 'suspended'; // Prueba vencida
+            } else {
+                mp_status = 'trial'; // En prueba
+            }
+            // Mantenemos plan actual (prueba)
         }
-
-        // 4️⃣ Resolver plan por monto pagado
-        const amount = lastPayment.transaction_amount!;
-
-        const VALID_PLANS: Record<number, { plan: string; limite: number }> = {
-            50000: { plan: 'basico', limite: 20 },
-            70000: { plan: 'estandar', limite: 50 },
-            80000: { plan: 'premium', limite: 100 }
-        };
-
-        const planInfo = VALID_PLANS[amount];
-
-        if (!planInfo) {
-            return NextResponse.json({
-                status: 'invalid_amount',
-                message: `Monto pagado ($${amount}) no corresponde a un plan válido`
-            });
-        }
-
-        const { plan, limite } = planInfo;
 
         // 5️⃣ Actualizar comercio en BD
-        const { data: updatedData, error: updateError } = await supabase
+        const { error: updateError } = await supabase
             .from('comercios')
             .update({
                 plan,
                 limite_productos: limite,
-                mp_subscription_id: lastPayment.id!.toString(), // Guardamos ID de pago en campo subscription (reuso)
-                mp_status: 'authorized', // Simulamos status authorized
-                mp_next_payment_date: new Date(paymentDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(), // Fecha + 30 días
+                mp_status: mp_status,
+                mp_subscription_id: lastPayment?.id?.toString() || null,
+                mp_next_payment_date: mp_next_payment_date,
             })
-            .eq('id', comercio.id)
-            .select();
+            .eq('id', comercio.id);
 
         if (updateError) {
             console.error('UPDATE ERROR', updateError);
@@ -116,9 +115,9 @@ export async function POST() {
 
         return NextResponse.json({
             status: 'updated',
+            mp_status,
             plan,
-            payment_id: lastPayment.id,
-            days_remaining: 32 - diffDays
+            message: `Estado actualizado a: ${mp_status}`
         });
 
     } catch (error: any) {
