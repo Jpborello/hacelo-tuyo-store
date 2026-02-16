@@ -11,13 +11,24 @@ interface PlanTabProps {
 
 const PLANS = [
     {
+        id: 'prueba',
+        name: 'Prueba Gratis (15 días)',
+        price: 'Gratis',
+        limit: 10,
+        features: ['Hasta 10 productos', '15 días de prueba', 'Sin tarjeta de crédito'],
+        color: 'green',
+        icon: Store,
+        hidden: true // Oculto en la lista de compra, pero visible en estado actual
+    },
+    {
         id: 'basico',
         name: 'Básico',
         price: '$50.000/mes',
         limit: 20,
         features: ['Hasta 20 productos', 'Catálogo online personalizado', 'Gestión de pedidos', 'WhatsApp integrado', 'Soporte por email'],
         color: 'blue',
-        icon: Store
+        icon: Store,
+        popular: true // Moved here
     },
     {
         id: 'estandar',
@@ -26,7 +37,6 @@ const PLANS = [
         limit: 50,
         features: ['Hasta 50 productos', 'Catálogo online personalizado', 'Gestión de pedidos', 'WhatsApp integrado', 'Soporte prioritario', 'Estadísticas básicas'],
         color: 'purple',
-        popular: true,
         icon: Zap
     },
     {
@@ -165,8 +175,8 @@ export default function PlanTab({ comercio, productosCount }: PlanTabProps) {
 
             {/* Comparativa de Planes */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {PLANS.map((plan) => {
-                    const isCurrent = plan.id === (comercio.plan || 'free');
+                {PLANS.filter(p => !p.hidden).map((plan) => {
+                    const isCurrent = plan.id === (comercio.plan || 'prueba');
                     const Icon = plan.icon;
                     const isLoading = loadingPlan === plan.id;
 
