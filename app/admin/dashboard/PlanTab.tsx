@@ -62,8 +62,8 @@ export default function PlanTab({ comercio, productosCount }: PlanTabProps) {
                 const res = await fetch('/api/mp/sync-subscription', { method: 'POST' });
                 const data = await res.json();
 
-                if (data.status === 'updated') {
-                    console.log('Plan actualizado desde Mercado Pago, refrescando vista...');
+                if (data.status === 'updated' || data.status === 'expired') {
+                    console.log('Plan actualizado/vencido desde Mercado Pago, refrescando vista...');
                     router.refresh();
                 }
             } catch (error) {

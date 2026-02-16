@@ -56,12 +56,22 @@ export async function POST() {
 
         // 3️⃣ Verificar si está vigente (30 días + 2 de gracia = 32)
         if (diffDays > 32) {
-            console.log(`Último pago vencido: ${diffDays} días atrás`);
-            // Podríamos actualizar la DB a 'expired' o 'free' si queremos ser estrictos
-            // Por ahora solo retornamos status
+            console.log(`Último pago vencido: ${diffDays} días atrás. Downgrading...`);
+
+            // ACTUALIZAR A PLAN GRATUITO (Downgrade)
+            await supabase
+                .from('comercios')
+                .update({
+                    plan: 'prueba',
+                    limite_productos: 10,
+                    mp_status: 'expired',
+                    mp_next_payment_date: null
+                })
+                .eq('id', comercio.id);
+
             return NextResponse.json({
                 status: 'expired',
-                message: `Pago vencido hace ${diffDays} días`,
+                message: `Pago vencido hace ${diffDays} días. Plan degradado a Prueba.`,
                 last_payment_date: lastPayment.date_created
             });
         }
