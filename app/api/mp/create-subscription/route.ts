@@ -59,9 +59,11 @@ export async function POST(req: Request) {
                         currency_id: 'ARS'
                     }
                 ],
+                /* 
                 payer: {
-                    email: user.email
+                    email: user.email // Comentado para evitar que MP force Sandbox por autocompra
                 },
+                */
                 back_urls: {
                     success: 'https://hacelotuyo.com.ar/admin/dashboard',
                     failure: 'https://hacelotuyo.com.ar/admin/dashboard',
