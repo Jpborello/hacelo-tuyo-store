@@ -32,6 +32,16 @@ export async function middleware(req: NextRequest) {
         data: { session },
     } = await supabase.auth.getSession()
 
+    let comercio = null;
+    if (session) {
+        const { data } = await supabase
+            .from('comercios')
+            .select('estado')
+            .eq('user_id', session.user.id)
+            .single();
+        comercio = data;
+    }
+
     // Proteger rutas /admin
     if (req.nextUrl.pathname.startsWith('/admin')) {
         if (!session) {
@@ -46,12 +56,6 @@ export async function middleware(req: NextRequest) {
         }
 
         // Check account status
-        const { data: comercio } = await supabase
-            .from('comercios')
-            .select('estado')
-            .eq('user_id', session.user.id)
-            .single()
-
         // If account is suspended, redirect to suspended page
         if (comercio?.estado === 'suspendido') {
             return NextResponse.redirect(new URL('/suspended', req.url))
@@ -64,7 +68,9 @@ export async function middleware(req: NextRequest) {
     }
 
     // Redirigir a dashboard si ya está autenticado y va a /login
-    if (req.nextUrl.pathname === '/login' && session) {
+    // SOLO si tiene comercio activo. Si no tiene comercio, lo dejamos en login
+    // para que pueda entrar con otra cuenta.
+    if (req.nextUrl.pathname === '/login' && session && comercio) {
         return NextResponse.redirect(new URL('/admin/dashboard', req.url))
     }
 
