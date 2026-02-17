@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { LogIn, Loader2 } from 'lucide-react';
+import Link from 'next/link';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -13,41 +14,26 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [isSignUp, setIsSignUp] = useState(false);
 
-    const handleAuth = async (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setLoading(true);
 
         try {
-            if (isSignUp) {
-                const { error } = await supabase.auth.signUp({
-                    email,
-                    password,
-                    options: {
-                        emailRedirectTo: `${window.location.origin}/admin/dashboard`,
-                    },
-                });
+            const { error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
 
-                if (error) throw error;
+            if (error) throw error;
 
-                alert('¡Registro exitoso! Revisa tu email para confirmar tu cuenta.');
+            if (email === process.env.NEXT_PUBLIC_ADMIN_EMAIL || email === 'jpborello25@gmail.com') {
+                router.push('/admin/backoffice');
             } else {
-                const { error } = await supabase.auth.signInWithPassword({
-                    email,
-                    password,
-                });
-
-                if (error) throw error;
-
-                if (email === 'jpborello25@gmail.com') {
-                    router.push('/admin/backoffice');
-                } else {
-                    router.push('/admin/dashboard');
-                }
-                router.refresh();
+                router.push('/admin/dashboard');
             }
+            router.refresh();
         } catch (err: any) {
             setError(err.message || 'Error en la autenticación');
         } finally {
@@ -65,14 +51,14 @@ export default function LoginPage() {
                         </div>
                     </div>
                     <h1 className="text-3xl font-bold text-gray-900">
-                        {isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión'}
+                        Iniciar Sesión
                     </h1>
                     <p className="text-gray-600 mt-2">
-                        {isSignUp ? 'Registrate para crear tu catálogo' : 'Accede a tu panel de administración'}
+                        Accede a tu panel de administración
                     </p>
                 </div>
 
-                <form onSubmit={handleAuth} className="space-y-6">
+                <form onSubmit={handleLogin} className="space-y-6">
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                             Email
@@ -123,22 +109,18 @@ export default function LoginPage() {
                                 Procesando...
                             </>
                         ) : (
-                            <>{isSignUp ? 'Crear Cuenta' : 'Ingresar'}</>
+                            'Ingresar'
                         )}
                     </button>
                 </form>
 
                 <div className="mt-6 text-center">
-                    <button
-                        onClick={() => {
-                            setIsSignUp(!isSignUp);
-                            setError('');
-                        }}
-                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                        disabled={loading}
-                    >
-                        {isSignUp ? '¿Ya tenés cuenta? Iniciá sesión' : '¿No tenés cuenta? Registrate'}
-                    </button>
+                    <p className="text-sm text-gray-600">
+                        ¿No tenés cuenta?{' '}
+                        <Link href="/register" className="text-blue-600 hover:text-blue-700 font-medium">
+                            Registrate acá
+                        </Link>
+                    </p>
                 </div>
             </div>
         </div>
