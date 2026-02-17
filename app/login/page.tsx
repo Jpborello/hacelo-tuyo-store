@@ -1,5 +1,7 @@
 'use client';
 
+// Login Page Refactored
+
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
