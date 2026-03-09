@@ -120,17 +120,17 @@ export default function SuspendedPage() {
                         <div className="border border-gray-200 rounded-lg p-3">
                             <h4 className="font-semibold text-sm text-gray-900">Básico</h4>
                             <p className="text-xs text-gray-600">20 productos</p>
-                            <p className="text-lg font-bold text-blue-600 mt-1">$50.000/mes</p>
+                            <p className="text-lg font-bold text-blue-600 mt-1">$30.000/mes</p>
                         </div>
                         <div className="border border-blue-500 rounded-lg p-3 bg-blue-50">
                             <h4 className="font-semibold text-sm text-gray-900">Estándar</h4>
                             <p className="text-xs text-gray-600">50 productos</p>
-                            <p className="text-lg font-bold text-blue-600 mt-1">$70.000/mes</p>
+                            <p className="text-lg font-bold text-blue-600 mt-1">$40.000/mes</p>
                         </div>
                         <div className="border border-gray-200 rounded-lg p-3">
                             <h4 className="font-semibold text-sm text-gray-900">Premium</h4>
                             <p className="text-xs text-gray-600">100 productos</p>
-                            <p className="text-lg font-bold text-blue-600 mt-1">$80.000/mes</p>
+                            <p className="text-lg font-bold text-blue-600 mt-1">$50.000/mes</p>
                         </div>
                     </div>
                 </div>
