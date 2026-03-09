@@ -9,7 +9,7 @@ const planes = [
     {
         id: 'basico',
         nombre: 'Básico',
-        precio: 50000,
+        precio: 30000,
         limite: 20,
         descripcion: 'Ideal para empezar',
         features: [
@@ -24,7 +24,7 @@ const planes = [
     {
         id: 'estandar',
         nombre: 'Estándar',
-        precio: 70000,
+        precio: 40000,
         limite: 50,
         descripcion: 'El más elegido',
         features: [
@@ -40,7 +40,7 @@ const planes = [
     {
         id: 'premium',
         nombre: 'Premium',
-        precio: 80000,
+        precio: 50000,
         limite: 100,
         descripcion: 'Para crecer sin límites',
         features: [
