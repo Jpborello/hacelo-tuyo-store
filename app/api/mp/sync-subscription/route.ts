@@ -85,9 +85,9 @@ export async function POST() {
             if (mp_status === 'authorized' || mp_status === 'grace_period') {
                 const amount = lastPayment.transaction_amount!;
                 const VALID_PLANS: Record<number, { plan: string; limite: number }> = {
-                    50000: { plan: 'basico', limite: 20 },
-                    70000: { plan: 'estandar', limite: 50 },
-                    80000: { plan: 'premium', limite: 100 }
+                    30000: { plan: 'basico', limite: 30 },
+                    40000: { plan: 'estandar', limite: 60 },
+                    50000: { plan: 'premium', limite: 100 }
                 };
                 if (VALID_PLANS[amount]) {
                     plan = VALID_PLANS[amount].plan;

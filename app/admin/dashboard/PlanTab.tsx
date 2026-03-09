@@ -24,8 +24,8 @@ const PLANS = [
         id: 'basico',
         name: 'Básico',
         price: '$30.000/mes',
-        limit: 20,
-        features: ['Hasta 20 productos', 'Catálogo online personalizado', 'Gestión de pedidos', 'WhatsApp integrado', 'Soporte por email'],
+        limit: 30,
+        features: ['Hasta 30 productos', 'Catálogo online personalizado', 'Gestión de pedidos', 'WhatsApp integrado', 'Soporte por email'],
         color: 'blue',
         icon: Store,
         popular: true // Moved here
@@ -34,8 +34,8 @@ const PLANS = [
         id: 'estandar',
         name: 'Estándar',
         price: '$40.000/mes',
-        limit: 50,
-        features: ['Hasta 50 productos', 'Catálogo online personalizado', 'Gestión de pedidos', 'WhatsApp integrado', 'Soporte prioritario', 'Estadísticas básicas'],
+        limit: 60,
+        features: ['Hasta 60 productos', 'Catálogo online personalizado', 'Gestión de pedidos', 'WhatsApp integrado', 'Soporte prioritario', 'Estadísticas básicas'],
         color: 'purple',
         icon: Zap
     },
