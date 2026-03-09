@@ -24,6 +24,18 @@ export async function POST() {
             return NextResponse.json({ error: 'Comercio not found' }, { status: 404 });
         }
 
+        // 🛡️ BYPASS PARA CUENTAS DE PRUEBA / ADMIN
+        // Si es la cuenta andres@prueba.com (o admin), no sincronizar y dejar la cuenta como esté en BD
+        const userEmail = user.email?.toLowerCase() || '';
+        if (userEmail === 'andres@test' || userEmail === 'andres@prueba.com' || userEmail === process.env.ADMIN_EMAIL) {
+            return NextResponse.json({
+                status: 'bypassed',
+                mp_status: 'active', // Forzar para la respuesta
+                plan: comercio.plan,
+                message: 'Cuenta administrativa o de prueba permanente.'
+            });
+        }
+
         // 1️⃣ Buscar PAGOS APROBADOS del usuario en MP por external_reference
         const client = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN! });
         const payment = new Payment(client);
