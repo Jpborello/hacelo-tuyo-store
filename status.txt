@@ -4,6 +4,11 @@ All Comercios in DB: [
     "id": "e6fd214c-c5bd-4768-bfb3-880ec4b2dd13",
     "nombre": "Nuevo Rumbo",
     "slug": "nuevo-rumbo"
+  },
+  {
+    "id": "6302a72a-96b4-4082-a135-de7294c46f69",
+    "nombre": "juampi",
+    "slug": "juampi"
   }
 ]
 Commerce: {
@@ -18,14 +23,14 @@ Commerce: {
   "limite_productos": 100,
   "fecha_alta": "2026-02-16T18:35:14.921",
   "fecha_ultimo_pago": null,
-  "proximo_pago": "2026-03-03",
+  "proximo_pago": "2099-01-01",
   "meses_sin_pagar": 0,
   "mp_subscription_id": null,
   "mp_preapproval_id": null,
-  "tiene_metodo_pago": false,
+  "tiene_metodo_pago": true,
   "notas_admin": null,
   "mp_payer_id": null,
-  "mp_status": "trial",
+  "mp_status": "suspended",
   "mp_external_reference": null,
   "mp_next_payment_date": null
 }

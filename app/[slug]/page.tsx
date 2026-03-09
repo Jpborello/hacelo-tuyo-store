@@ -59,7 +59,6 @@ export default async function CatalogPage({ params }: CatalogPageProps) {
         .from('productos')
         .select('*')
         .eq('comercio_id', comercio.id)
-        .eq('activo', true)
         .order('nombre');
 
     const productosData: Producto[] = productos || [];
