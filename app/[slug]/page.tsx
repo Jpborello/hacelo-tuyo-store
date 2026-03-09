@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { notFound } from 'next/navigation';
 import CatalogClient from './CatalogClient';
 import type { Comercio, Producto, Categoria } from '@/lib/types/database';
@@ -9,10 +9,10 @@ interface CatalogPageProps {
 
 export default async function CatalogPage({ params }: CatalogPageProps) {
     const { slug } = await params;
-    const supabase = await createServerSupabaseClient();
+    const supabaseAdmin = createAdminClient();
 
     // Obtener comercio por slug
-    const { data: comercio, error: comercioError } = await supabase
+    const { data: comercio, error: comercioError } = await supabaseAdmin
         .from('comercios')
         .select('*')
         .eq('slug', slug)
@@ -46,7 +46,7 @@ export default async function CatalogPage({ params }: CatalogPageProps) {
     }
 
     // Obtener categorías del comercio
-    const { data: categorias } = await supabase
+    const { data: categorias } = await supabaseAdmin
         .from('categorias')
         .select('*')
         .eq('comercio_id', comercio.id)
@@ -54,11 +54,12 @@ export default async function CatalogPage({ params }: CatalogPageProps) {
 
     const categoriasData: Categoria[] = categorias || [];
 
-    // Obtener productos del comercio
-    const { data: productos } = await supabase
+    // Obtener productos del comercio (solo activos)
+    const { data: productos } = await supabaseAdmin
         .from('productos')
         .select('*')
         .eq('comercio_id', comercio.id)
+        .eq('activo', true)
         .order('nombre');
 
     const productosData: Producto[] = productos || [];

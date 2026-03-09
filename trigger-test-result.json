@@ -1,0 +1,14 @@
+{
+  "before": {
+    "estado": "activo",
+    "mp_status": "suspended"
+  },
+  "product": {
+    "id": "7cd51661-dae0-42f9-b6ba-76b1106649a1",
+    "precio": 1235
+  },
+  "after": {
+    "estado": "activo",
+    "mp_status": "suspended"
+  }
+}

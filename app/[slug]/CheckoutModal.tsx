@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { X, Loader2, ShoppingCart } from 'lucide-react';
 import type { CartItem } from '@/lib/store/cart';
 
@@ -22,8 +21,6 @@ export default function CheckoutModal({
     comercioId,
     onSuccess,
 }: CheckoutModalProps) {
-    const supabase = createClient();
-
     const [formData, setFormData] = useState({
         nombre: '',
         direccion: '',
@@ -49,36 +46,25 @@ export default function CheckoutModal({
                 throw new Error('El carrito está vacío');
             }
 
-            // Crear pedido
-            const { data: pedido, error: pedidoError } = await supabase
-                .from('pedidos')
-                .insert({
-                    comercio_id: comercioId,
-                    cliente_nombre: formData.nombre,
-                    direccion: formData.direccion,
-                    telefono: formData.telefono,
-                    cuit_dni: formData.cuitDni || null,
-                    total: total,
-                    estado: 'pendiente',
-                })
-                .select()
-                .single();
+            // Enviar pedido a la API segura
+            const response = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    comercioId,
+                    items,
+                    total,
+                    formData,
+                }),
+            });
 
-            if (pedidoError) throw pedidoError;
+            const result = await response.json();
 
-            // Crear detalles del pedido
-            const detalles = items.map((item) => ({
-                pedido_id: pedido.id,
-                producto_id: item.id,
-                cantidad: item.cantidad,
-                precio_unitario: item.precio,
-            }));
-
-            const { error: detallesError } = await supabase
-                .from('detalle_pedidos')
-                .insert(detalles);
-
-            if (detallesError) throw detallesError;
+            if (!response.ok) {
+                throw new Error(result.error || 'Error al procesar el pedido');
+            }
 
             // Éxito
             alert('¡Pedido enviado exitosamente! El mayorista se contactará pronto.');
